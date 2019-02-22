@@ -75,7 +75,7 @@ seconde ligne est la position du véhicule à sortir (ligne 2, colonne 0, longue
 format ligne, colonne, longueur, horizontal (1) ou vertical (0). Dans le cas
 d'un véhicule horizontale, la position donnée est celle de la case la plus à
 gauche, dans le cas d'un véhicule vertical, la position donnée est celle de la
-case la plue haute.
+case la plus haute.
 
 ## Parcours
 
@@ -91,7 +91,7 @@ fois chaque situation de jeu, et se rendre compte que certaines situations ont
 déjà été explorées. Sans cette attention, votre exploration risquera de tourner
 en rond entre des situations de jeu.
 
-## Élaboration de nouveau puzzles
+## Élaboration de nouveaux puzzles
 
 Une fois la résolution programmée, et le parcours du graphe compris,
 consacrez-vous à la création de nouveaux puzzles. Cette fois, il s'agit de
@@ -141,7 +141,7 @@ travail.
 
 Le jour du rendu, en séance avec votre encadrant, il vous fournira un horaire de
 passage pour un oral de démonstration.  Pendant cet oral, vous ferez brièvement
-la démonstration de vos résultats, puis vous serez intérogés sur le code que
+la démonstration de vos résultats, puis vous serez interrogés sur le code que
 vous avez rendu. Votre correcteur aura ici plusieurs objectifs :
 
 * déterminer à quel point vous avez compris le sujet
@@ -176,7 +176,7 @@ muni d'une grille pour évaluer les points suivants :
   * pas de lignes de code trop longues
   * indentation claire
 
-Il est toujours difficile de donner un barême précis a priori, sans se bloquer
+Il est toujours difficile de donner un barème précis a priori, sans se bloquer
 ensuite la possibilité de pouvoir adapter la notation en fonction des travaux
 rendus et de la difficulté perçue du sujet. Il est néanmoins possible d'affirmer
 que pour obtenir la moyenne, il sera nécessaire d'avoir au moins abordé la
