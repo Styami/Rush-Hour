@@ -38,7 +38,6 @@ façon pratique aux situations de jeu adjacentes.
 
 Il ne s'agit pas ici de *construire le graphe complet* ni de le *stocker*, mais
 simplement de pouvoir le *parcourir*.
-{: .alert .alert-gitlab-pruple .text-center}
 
 Pour vous aider dans l'élaboration de votre structure de données, vous pourrez
 utiliser le fait que :
@@ -84,7 +83,7 @@ la situation de jeu initiale, et de parcourir le graphe pour trouver une
 situation de jeu gagnante, ainsi que les coups permettant de l'atteindre.
 Idéalement, le nombre de coups à jouer pour atteindre cette situation de jeu
 gagnante devra être minimal. Dans le cas de l'exemple fourni ci-dessus, le code
-de votre responsable d'UE a donné une solution en 15 coups.
+de votre responsable d'UE a donné une solution en 14 coups.
 
 Attention en particulier à faire en sorte que votre exploration n'étudie qu'une
 fois chaque situation de jeu, et se rendre compte que certaines situations ont
