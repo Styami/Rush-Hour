@@ -33,8 +33,8 @@ reliées par une arête dans le graphe.
 ![Situation fin](Sujet/rush_hour_situation_end.png)
 
 Votre première tâche pour ce projet consiste à élaborer une structure de données
-pour représenter les situations de jeu, munies de méthodes pour accéder de
-façon pratique aux situations de jeu adjacentes.
+sous la forme d'une classe pour représenter les situations de jeu, munies de 
+méthodes pour accéder de façon pratique aux situations de jeu adjacentes.
 
 Il ne s'agit pas ici de *construire le graphe complet* ni de le *stocker*, mais
 simplement de pouvoir le *parcourir*.
@@ -68,13 +68,18 @@ pourra être décrite par [le fichier suivant](Sujet/puzzle.txt) :
 4 5 2 0
 5 1 2 1
 ```
-La première ligne correspond à la position de la sortie (ligne 2 colonne 5), la
-seconde ligne est la position du véhicule à sortir (ligne 2, colonne 0, longueur
-2, horizontal), les lignes suivantes sont les autres véhicules, toujours avec le
-format ligne, colonne, longueur, horizontal (1) ou vertical (0). Dans le cas
-d'un véhicule horizontale, la position donnée est celle de la case la plus à
-gauche, dans le cas d'un véhicule vertical, la position donnée est celle de la
-case la plus haute.
+La première ligne correspond à la position de la sortie (ligne 2 colonne 5, on
+commence la numérotation à 0), la seconde ligne est la position du véhicule à
+sortir (ligne 2, colonne 0, longueur 2, horizontal), les lignes suivantes sont
+les autres véhicules, toujours avec le format ligne, colonne, longueur,
+horizontal (1) ou vertical (0). Dans le cas d'un véhicule horizontal, la
+position donnée est celle de la case la plus à gauche, dans le cas d'un véhicule
+vertical, la position donnée est celle de la case la plus haute.
+
+Pour favoriser les échanges, vous pouvez munir votre classe d'un constructeur
+prenant un fichier en paramètre, au format décrit ci-dessus, ainsi que d'une
+fonction pour exporter votre situation de jeu sous la forme d'un fichier
+similaire.
 
 ## Parcours
 
@@ -83,12 +88,18 @@ la situation de jeu initiale, et de parcourir le graphe pour trouver une
 situation de jeu gagnante, ainsi que les coups permettant de l'atteindre.
 Idéalement, le nombre de coups à jouer pour atteindre cette situation de jeu
 gagnante devra être minimal. Dans le cas de l'exemple fourni ci-dessus, le code
-de votre responsable d'UE a donné une solution en 14 coups.
+de votre responsable d'UE a donné une solution en 14 coups. Il est nécessaire de
+réaliser un parcours de graphe bien choisi. Il n'est pas ici nécessaire de
+générer tout le graphe, mais seulement de partir de la situation de départ, de
+lister les situations atteignables en déplaçant des véhicules, et de les ajouter
+à votre structure de données gérant les situations de jeu encore à traiter,
+selon le type de parcours choisi.
 
-Attention en particulier à faire en sorte que votre exploration n'étudie qu'une
-fois chaque situation de jeu, et se rendre compte que certaines situations ont
-déjà été explorées. Sans cette attention, votre exploration risquera de tourner
-en rond entre des situations de jeu.
+Les situations de jeu sont donc découvertes petit à petit, attention cependant à
+faire en sorte que votre exploration n'étudie qu'une fois chaque situation de
+jeu, et se rendre compte que certaines situations ont déjà été explorées. Sans
+cette attention, votre exploration risquera de tourner en rond entre des
+situations de jeu, ou d'en explorer beaucoup trop.
 
 ## Élaboration de nouveaux puzzles
 
