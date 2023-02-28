@@ -2,6 +2,8 @@
 #define __UTILS__
 
 #include <iostream>
+#include <ostream>
+#include <math.h>
 
 struct int2 {
     int x, y;
@@ -10,5 +12,7 @@ struct int2 {
 
     friend std::ostream& operator<<(std::ostream& os, const int2& a);
 };
+
+int human_readable(const char& _bit_char);
 
 #endif
