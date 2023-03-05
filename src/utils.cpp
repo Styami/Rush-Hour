@@ -8,12 +8,37 @@ std::ostream& operator<<(std::ostream& os, const int2& a) {
     return os;
 }
 
-int2::int2(int x_, int y_) {
-    x = x_;
-    y = y_;
+int2::int2() :
+    x(0), y(0)
+{}
+
+int2::int2(int x_, int y_) :
+    x(x_), y(x_)
+{}
+
+int2 int2::operator+(int2 a) {
+    return (int2){x + a.x, y + a.y};
 }
-// 128 64 32 16 8 4 2 1
-//  0   1  0  0 0 0 0 1
+
+int2 int2::operator-(int2 a) {
+    return (int2){x - a.x, y - a.y};
+}
+
+int2 int2::operator*(int2 a) {
+    return (int2){x * a.x, y * a.y};
+}
+
+int2 int2::operator/(int2 a) {
+    return (int2){x / a.x, y / a.y};
+}
+
+int2 int2::operator*(int a) {
+    return (int2){x * a, y * a};
+}
+
+int2 int2::operator/(int a) {
+    return (int2){x / a, y / a};
+}
 
 int human_readable(const char& _bit_char) {
     int ret = 0;
