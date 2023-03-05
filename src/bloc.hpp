@@ -25,8 +25,12 @@ public:
     // Renvoie un int2 contenant la position x et y du bloc
     int2 get_coord() const;
 
-    // Renvoie la taille du bloc
-    int get_size() const;
+    /**
+     * @brief Renvoie la longueur du bloc
+     * 
+     * @return uint8_t Longueur du bloc
+     */
+    uint8_t get_size() const;
 
     // Renvoie l'orientation du bloc
     Orientation get_orientation() const;

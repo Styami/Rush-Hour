@@ -17,8 +17,8 @@ int2 Bloc::get_coord() const {
     );
 }
 
-int Bloc::get_size() const {
-    return (m_data & 0b00000010) >> 1;
+uint8_t Bloc::get_size() const {
+    return ((m_data & 0b00000010) == 2 ? 3 : 2);
 }
 
 Orientation Bloc::get_orientation() const {
@@ -43,7 +43,7 @@ std::ostream& operator<<(std::ostream& os, Bloc& a) {
 
 bool Bloc::test() {
     int2 coord(0, 0);
-    bool size;
+    uint8_t size;
     Orientation o;
 
     Bloc b(0, 0, false, Orientation::horizontal);
@@ -59,7 +59,7 @@ bool Bloc::test() {
     size = b.get_size();
     o = b.get_orientation();
 
-    if(coord.x != 0 && coord.y != 0 && size != false && o != Orientation::horizontal) {
+    if(coord.x != 0 && coord.y != 0 && size != 2 && o != Orientation::horizontal) {
         std::cout << "Erreur dans les getter test 1" << "\n"; 
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
@@ -82,7 +82,7 @@ bool Bloc::test() {
     size = b.get_size();
     o = b.get_orientation();
 
-    if(coord.x != 7 && coord.y != 7 && size != true && o != Orientation::vertical) {
+    if(coord.x != 7 && coord.y != 7 && size != 3 && o != Orientation::vertical) {
         std::cout << "Erreur dans les getter test 2" << "\n"; 
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
@@ -105,7 +105,7 @@ bool Bloc::test() {
     size = b.get_size();
     o = b.get_orientation();
 
-    if(coord.x != 5 && coord.y != 3 && size != false && o != Orientation::vertical) {
+    if(coord.x != 5 && coord.y != 3 && size != 2 && o != Orientation::vertical) {
         std::cout << "Erreur dans les getter test 3" << "\n"; 
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
