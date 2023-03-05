@@ -13,6 +13,10 @@ enum class Orientation {
 class Bloc {
 public:
     // Crée un bloc dans l'espace mémoire
+    // initalise toutes les valeurs à 0
+    Bloc();
+
+    // Crée un bloc dans l'espace mémoire
     // _x € [0; 5]
     // _y € [0; 5]
     // _size: false : taille 2    true : taille 3

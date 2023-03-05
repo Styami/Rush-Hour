@@ -1,6 +1,10 @@
 #include "bloc.hpp"
 #include "utils.hpp"
 
+Bloc::Bloc() :
+    m_data(set_data(0, 0, false, Orientation::horizontal))
+{}
+
 Bloc::Bloc(char _x, char _y, bool _size, Orientation _orientation) :
     m_data(set_data(_x, _y, _size, _orientation))
 {
