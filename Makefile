@@ -1,6 +1,6 @@
 # Executable
 
-bin/test: obj/test.o obj/bloc.o obj/utils.o
+bin/test: obj/test.o obj/bloc.o obj/plateau.o obj/utils.o 
 	g++ -Wall -o $@ $^
 
 # Objets

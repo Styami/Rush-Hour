@@ -4,6 +4,7 @@
 #include "bloc.hpp"
 #include <memory>
 #include <string>
+#include <iostream>
 
 
 class Plateau {
@@ -21,13 +22,14 @@ public:
      * @param file_path Chemin vers le fichier de jeu
      */
     Plateau(std::string file_path);
+
     ~Plateau();
 
     /**
      * @brief Vérifie si un bloc peut se déplacer d'une certaine distance
      * Suppose que les déplacements antérieurs sont possible.
      *   Ne vérifie que si l'extrémité du bloc arrive sur une case vide.
-     * 
+     *   Ne vérifie pas si le déplacement envoie le bloc en dehors de la map
      * @param block Une référence sur un bloc
      * @param displacement La distance à laquelle se déplacer
      *      <0 : Coin supérieur gauche
