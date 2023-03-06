@@ -22,6 +22,13 @@ public:
     // _size: false : taille 2    true : taille 3
     Bloc(char _x, char _y, bool _size, Orientation _orientation);
 
+    /**
+     * @brief Constructeur par copie
+     * 
+     * @param b bloc original
+     */
+    Bloc(Bloc& b);
+
     // Renvoie un int2 contenant la position x et y du bloc
     int2 get_coord() const;
 
@@ -35,12 +42,27 @@ public:
     // Renvoie l'orientation du bloc
     Orientation get_orientation() const;
 
+    /**
+     * @brief Renvoie les données condensées de la structure
+     * 
+     * @return char 
+     */
+    char get_raw() const;
+
     // Modifie les données en fonction des paramètres
     // _x € [0; 5]
     // _y € [0; 5]
     // _size: false : taille 2    true : taille 3
     // Renvoie les données du bloc crée
     char& set_data(char _x, char _y, bool _size, Orientation _orientation);
+
+    /**
+     * @brief Modifie les données avec celle passées en paramètre
+     * 
+     * @param raw_data représentation condensé d'un bloc
+     * @return char& 
+     */
+    char& set_data(char raw_data);
 
     friend std::ostream& operator<<(std::ostream& os, Bloc& a);
 

@@ -7,12 +7,15 @@ Bloc::Bloc() :
 
 Bloc::Bloc(char _x, char _y, bool _size, Orientation _orientation) :
     m_data(set_data(_x, _y, _size, _orientation))
-{
-}
-    
+{}
+
+Bloc::Bloc(Bloc& b) :
+    m_data(b.m_data)
+{}
+
 int2 Bloc::get_coord() const {
     return int2(
-        (m_data & 0b11100000) >> 4,
+        (m_data & 0b11100000) >> 5,
         (m_data & 0b00011100) >> 2
     );
 }
@@ -22,7 +25,11 @@ uint8_t Bloc::get_size() const {
 }
 
 Orientation Bloc::get_orientation() const {
-    return (m_data & 0b00000001) == 1 ? Orientation::horizontal : Orientation::vertical;
+    return (m_data & 0b00000001) == 0 ? Orientation::horizontal : Orientation::vertical;
+}
+
+char Bloc::get_raw() const {
+    return m_data;
 }
 
 char& Bloc::set_data(char _x, char _y, bool _size, Orientation _orientation) {
@@ -32,7 +39,12 @@ char& Bloc::set_data(char _x, char _y, bool _size, Orientation _orientation) {
     m_data <<= 1;
     m_data += _size & 0b1;
     m_data <<= 1;
-    m_data += _orientation == Orientation::horizontal ? 0 : 1;
+    m_data += (_orientation == Orientation::horizontal ? 0 : 1);
+    return m_data;
+}
+
+char& Bloc::set_data(char raw_data) {
+    m_data = raw_data;
     return m_data;
 }
 
@@ -42,6 +54,8 @@ std::ostream& operator<<(std::ostream& os, Bloc& a) {
 }
 
 bool Bloc::test() {
+    int nb_erreur = 0;
+
     int2 coord(0, 0);
     uint8_t size;
     Orientation o;
@@ -52,19 +66,19 @@ bool Bloc::test() {
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
         
-        return false;
+        nb_erreur++;
     }
 
     coord = b.get_coord();
     size = b.get_size();
     o = b.get_orientation();
 
-    if(coord.x != 0 && coord.y != 0 && size != 2 && o != Orientation::horizontal) {
+    if(coord.x != 0 || coord.y != 0 || size != 2 || o != Orientation::horizontal) {
         std::cout << "Erreur dans les getter test 1" << "\n"; 
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
 
-        return false;
+        nb_erreur++;
     }
 
 
@@ -75,19 +89,19 @@ bool Bloc::test() {
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
 
-        return false;
+        nb_erreur++;
     }
 
     coord = b.get_coord();
     size = b.get_size();
     o = b.get_orientation();
 
-    if(coord.x != 7 && coord.y != 7 && size != 3 && o != Orientation::vertical) {
+    if(coord.x != 7 || coord.y != 7 || size != 3 || o != Orientation::vertical) {
         std::cout << "Erreur dans les getter test 2" << "\n"; 
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
 
-        return false;
+        nb_erreur++;
     }
 
 
@@ -98,21 +112,24 @@ bool Bloc::test() {
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
 
-        return false;
+        nb_erreur++;
     }
 
     coord = b.get_coord();
     size = b.get_size();
     o = b.get_orientation();
 
-    if(coord.x != 5 && coord.y != 3 && size != 2 && o != Orientation::vertical) {
+    if(coord.x != 5 || coord.y != 3 || size != 2 || o != Orientation::vertical) {
         std::cout << "Erreur dans les getter test 3" << "\n"; 
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
 
-        return false;
+        nb_erreur++;
     }
 
-
+    if(nb_erreur != 0) {
+        std::cout << nb_erreur << " erreurs dans bloc\n";
+        return false;
+    }
     return true;
 }
