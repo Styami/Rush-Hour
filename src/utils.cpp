@@ -13,7 +13,7 @@ int2::int2() :
 {}
 
 int2::int2(int x_, int y_) :
-    x(x_), y(x_)
+    x(x_), y(y_)
 {}
 
 int2 int2::operator+(int2 a) {
