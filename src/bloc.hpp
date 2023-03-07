@@ -27,7 +27,7 @@ public:
      * 
      * @param b bloc original
      */
-    Bloc(Bloc& b);
+    Bloc(const Bloc& b);
 
     // Renvoie un int2 contenant la position x et y du bloc
     int2 get_coord() const;
@@ -63,6 +63,13 @@ public:
      * @return char& 
      */
     char& set_data(char raw_data);
+
+    /**
+     * @brief Modifie les coordonnées du bloc
+     * 
+     * @param new_coord 
+     */
+    void set_coord(int2 new_coord);
 
     friend std::ostream& operator<<(std::ostream& os, Bloc& a);
 

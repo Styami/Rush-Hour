@@ -9,7 +9,7 @@ Bloc::Bloc(char _x, char _y, bool _size, Orientation _orientation) :
     m_data(set_data(_x, _y, _size, _orientation))
 {}
 
-Bloc::Bloc(Bloc& b) :
+Bloc::Bloc(const Bloc& b) :
     m_data(b.m_data)
 {}
 
@@ -46,6 +46,14 @@ char& Bloc::set_data(char _x, char _y, bool _size, Orientation _orientation) {
 char& Bloc::set_data(char raw_data) {
     m_data = raw_data;
     return m_data;
+}
+
+void Bloc::set_coord(int2 new_coord) {
+    char data = new_coord.x;
+    data <<=3;
+    data += new_coord.y;
+    data <<=2;
+    m_data = data + (m_data & 0b00000011);
 }
 
 std::ostream& operator<<(std::ostream& os, Bloc& a) {
@@ -124,6 +132,13 @@ bool Bloc::test() {
         std::cout << "   " << b.get_coord() << " " << b.get_size() << " " << (b.get_orientation() == Orientation::horizontal ? "h" : "v") << "\n";
         std::cout << "   " << "Binaire: " << human_readable(b.m_data) << std::endl;
 
+        nb_erreur++;
+    }
+
+    b.set_coord(int2(4, 2));
+    coord = b.get_coord();
+    if(coord.x != 4 || coord.y != 2) {
+        std::cout << "Erreur dans set coord: (4, 2) attendu, mais " << coord << " lu.\n";
         nb_erreur++;
     }
 
