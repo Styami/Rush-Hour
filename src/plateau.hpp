@@ -5,8 +5,17 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <vector>
 
-
+/**
+ * @brief Chaque instance de plateau devra stocker les blocs qui le composent, ainsi que le bloc à sortir et les coordonnées de la sorties.
+ * Les blocs ont déjà une bonne complexité spatial, mais pour tester les collisions il faudrait itérer sur chacun d'entre eux.
+ * On va donc ajouter un tableau de collision de manière statique (pour ne pas peser plus lourd en mémoire) et simplifier les calculs de collisions.
+ * Une instance de plateau pourra donc être "chargée" (il deviendra le plateau que l'on traite): 
+ *      On itèrera une seule fois sur tous les blocs du plateau pour construire le tableau de collision.
+ *      On pourra tester si un bloc est déplaçable.
+ *      On pourra déplacer un bloc et obtenir une nouvelle instance de plateau.
+ */
 class Plateau {
 public:
     /**
@@ -15,8 +24,56 @@ public:
      */
     Plateau(std::size_t nb_blocks);
 
+    /**
+     * @brief Construit un plateau à partir des blocs passé en paramètre.
+     * 
+     * @param blocks 
+     */
+    Plateau(std::vector<Bloc> blocks);
+
     ~Plateau();
 
+    /**
+     * @brief Défini le plateau comme actif vis à vis des tests de collisions et récupération des voisins.
+     */
+    void load();
+
+    /**
+     * @brief Renvoie une liste de toutes les configurations de plateau accessible depuis celui ci.
+     * 
+     * @return std::vector<Plateau*> Liste de configuration de plateau 
+     */
+    std::vector<Plateau*> get_neighbours();
+
+    /**
+     * @brief Fonction de test
+     * 
+     * @return true La classe fonctionne comme attendu
+     * @return false La classe contient des bugs
+     */
+    static bool test();
+
+private:
+    /** @brief Tableau de blocs composant le plateau de jeu
+     */
+    Bloc* m_blocks_array;
+
+    /**
+     * @brief Stock le nombre de blocs contenu dans le plateau de jeu
+     */
+    std::size_t m_blocks_count;
+
+    /**
+     * @brief Tableau de booléens représentant si la case est occupée par un bloc ou non
+     */
+    static bool m_collision_array[36];
+
+    /**
+     * @brief Pointeur sur le plateau chargé
+     * 
+     */
+    static Plateau* m_loaded_plateau;
+    
     /**
      * @brief Vérifie si un bloc peut se déplacer d'une certaine distance
      * Suppose que les déplacements antérieurs sont possible.
@@ -29,7 +86,7 @@ public:
      * @return true Le bloc peut se déplacer
      * @return false Le bloc ne peut pas se déplacer
      */
-    bool can_block_move(const Bloc& block, int displacement) const;
+    static bool can_block_move(const Bloc& block, int displacement);
 
     /**
      * @brief Renvoie un pointeur sur plateau dans la nouvelle configuration (après déplacement)
@@ -41,31 +98,9 @@ public:
      *      >0 : Coin inférieur droit
      * @return std::weak_ptr<Plateau> 
      */
-    std::unique_ptr<Plateau> move_block(const Bloc& block, int displacement) const;
+    static std::unique_ptr<Plateau> move_block(Bloc& block, int displacement);
 
-    static bool test();
-
-private:
-    /** @brief Tableau de bloc, à tenir à jour après chaque màj du plateau de jeu
-     *   On l'utilisera pour récupérer directement la version condensée du plateau
-     *   de jeu, pour réduire le temps d'exécution lors de la génération des noeuds
-     * du graph
-     */
-    Bloc* m_blocks_array;
-
-    /**
-     * @brief Stock le nombre de blocs contenu dans le plateau de jeu
-     */
-    std::size_t m_blocks_count;
-
-    /**
-     * @brief Vérifie si la cellule est occupé par un bloc
-     * 
-     * @param coords Coordonnée testée
-     * @return true La cellule contient un bloc
-     * @return false La cellule ne contient pas de bloc
-     */
-    bool is_cell_empty(int2 coords) const;
+    static void clear_collision_array();
 };
 
 #endif
