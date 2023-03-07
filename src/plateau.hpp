@@ -15,14 +15,6 @@ public:
      */
     Plateau(std::size_t nb_blocks);
 
-    /**
-     * @brief Constructeur du plateau. Lit un fichier et instancie le bon nombre de blocs
-     * et les variables membres.
-     * 
-     * @param file_path Chemin vers le fichier de jeu
-     */
-    Plateau(std::string file_path);
-
     ~Plateau();
 
     /**
@@ -74,13 +66,6 @@ private:
      * @return false La cellule ne contient pas de bloc
      */
     bool is_cell_empty(int2 coords) const;
-
-    /// Charge un fichier en mémoire. Renvoie un tableau de blocs
-    static Bloc* load_file(std::string file_path);
-
-    /// Renvoie le nombre de blocs du plateau en lisant depuis un fichier
-    /// nécessaire pour instancier m_blocs_count
-    static std::size_t get_block_count_from_file(std::string file_path);
 };
 
 #endif

@@ -4,24 +4,8 @@ Plateau::Plateau(std::size_t nb_blocks) :
     m_blocks_array(new Bloc[nb_blocks]), m_blocks_count(nb_blocks)
 {}
 
-Plateau::Plateau(std::string file_path) :
-    m_blocks_array(load_file(file_path)), 
-    m_blocks_count(get_block_count_from_file(file_path))
-{
-}
-
 Plateau::~Plateau() {
     delete [] m_blocks_array;
-}
-
-Bloc* Plateau::load_file(std::string file_path) {
-    // TODO: implémenter lecture de fichier
-    return nullptr;
-}
-
-std::size_t Plateau::get_block_count_from_file(std::string file_path) {
-    // TODO: implémenter lecture nombre de bloc
-    return 0;
 }
 
 bool Plateau::can_block_move(const Bloc& block, int displacement) const {
