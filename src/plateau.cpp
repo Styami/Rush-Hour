@@ -1,8 +1,8 @@
 #include "plateau.hpp"
 #include "bloc.hpp"
 
-bool Plateau::m_collision_array[36]{0};
-Plateau* Plateau::m_loaded_plateau = nullptr;
+bool Plateau::s_collision_array[36]{0};
+Plateau* Plateau::s_loaded_plateau = nullptr;
 
 Plateau::Plateau(std::size_t nb_blocks) :
     m_blocks_array(new Bloc[nb_blocks]), m_blocks_count(nb_blocks)
@@ -22,18 +22,18 @@ Plateau::~Plateau() {
 
 void Plateau::clear_collision_array() {
     for(int i = 0 ; i < 36; i++)
-        m_collision_array[i] = false;
+        s_collision_array[i] = false;
 }
 
 void Plateau::load() {
-    m_loaded_plateau = this;
+    s_loaded_plateau = this;
     clear_collision_array();
 
     for(std::size_t i = 0 ; i < m_blocks_count; i++) {
         int2 coords = m_blocks_array[i].get_coord();
 
         for(int j = 0; j < m_blocks_array[i].get_size(); j++) {
-            m_collision_array[coords.x + coords.y * 6] = true;
+            s_collision_array[coords.x + coords.y * 6] = true;
             
             if(m_blocks_array[i].get_orientation() == Orientation::horizontal)
                 coords.x++;
@@ -52,7 +52,10 @@ bool Plateau::can_block_move(const Bloc& block, int displacement) {
     else
         coords.y += offset;
 
-    return !m_collision_array[coords.x + coords.y * 6];
+    if(coords.x < 0 || coords.y < 0 || coords.x > 5 || coords.y > 5)
+        return false;
+
+    return !s_collision_array[coords.x + coords.y * 6];
 }
 
 std::unique_ptr<Plateau> Plateau::move_block(Bloc& block, int displacement) {
@@ -67,14 +70,21 @@ std::unique_ptr<Plateau> Plateau::move_block(Bloc& block, int displacement) {
     
     // Déplace le block
     block.set_coord(new_coord);
-    for(std::size_t i = 0; i < m_loaded_plateau->m_blocks_count; i++) {
-        res.push_back(m_loaded_plateau->m_blocks_array[i]);
+    for(std::size_t i = 0; i < s_loaded_plateau->m_blocks_count; i++) {
+        res.push_back(s_loaded_plateau->m_blocks_array[i]);
     }
     // Puis le remet dans l'état inital
     block.set_coord(prev_coord);
 
     return make_unique<Plateau>(res);
 }
+
+
+//
+//
+//     TESTS UNITAIRES
+//
+//
 
 void static load_blocs_map(bool* arr, const Bloc* p, std::size_t p_size) {
     for(int i = 0; i < 36; i++)
@@ -106,6 +116,22 @@ void static print_debug_tab(bool* blocs_map, bool* collision_array) {
     }
 }
 
+void Plateau::test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur) {
+    if(p.can_block_move(p.m_blocks_array[index], displacement) != expected_result) {
+        nb_erreur++;
+        std::cout << "Le bloc d'index " << index << 
+            (expected_result == false ? "ne" : "") <<
+            " devrait " <<
+            (expected_result == false ? "pas" : "") <<
+            " pouvoir se déplacer de " << abs(displacement) << " vers ";
+        if(p.m_blocks_array[index].get_orientation() == Orientation::horizontal)
+            std::cout << (displacement < 0 ? "la gauche" : "la droite");
+        else
+            std::cout << (displacement < 0 ? "le haut" : "le bas");
+        std::cout << "\n";
+    }
+}
+
 bool Plateau::test() {
     int nb_erreur = 0;
     bool last_failed = false;
@@ -124,7 +150,7 @@ bool Plateau::test() {
         p.load();
 
         for(std::size_t i = 0; i < 36; i++) {
-            if(blocs_map[i] != Plateau::m_collision_array[i]) {
+            if(blocs_map[i] != Plateau::s_collision_array[i]) {
                 nb_erreur++;
                 last_failed = true;
             }
@@ -134,45 +160,23 @@ bool Plateau::test() {
             last_failed = false;
             std::cout << "Le tableau de collision ne correspond pas au tableau chargé\n";
             std::cout << "Données réelles:      collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::m_collision_array);
+            print_debug_tab(blocs_map, Plateau::s_collision_array);
         }
-
 
         // Test de can_block_move
-        if(!p.can_block_move(p.m_blocks_array[0], -1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 devrait pouvoir se déplacer de 1 vers la gauche\n"; 
-        }
-        if(!p.can_block_move(p.m_blocks_array[0], 1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 devrait pouvoir se déplacer de 1 vers la droite\n"; 
-        }
-        if(p.can_block_move(p.m_blocks_array[0], 2)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 ne devrait pas pouvoir se déplacer de 2 vers la droite\n"; 
-        }
-        
-        if(!p.can_block_move(p.m_blocks_array[1], 1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 1 vers le bas\n";
-        }
-        if(!p.can_block_move(p.m_blocks_array[1], -1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 1 vers le haut\n";
-        }
-        if(!p.can_block_move(p.m_blocks_array[1], -2)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 2 vers le haut\n";
-        }
+        test_can_block_move(p, 0, -1, true, nb_erreur);
+        test_can_block_move(p, 0, 1, true, nb_erreur);
+        test_can_block_move(p, 0, 2, false, nb_erreur);
+        test_can_block_move(p, 1, 1, true, nb_erreur);
+        test_can_block_move(p, 1, -1, true, nb_erreur);
+        test_can_block_move(p, 1, -2, true, nb_erreur);
 
         // Affichage en cas d'erreur
         if(nb_erreur != 0) {
             std::cout << "Données réelles:      Collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::m_collision_array);
+            print_debug_tab(blocs_map, Plateau::s_collision_array);
         }
     }
-    
-    std::cout << "Premier test réussi" << std::endl;
 
     std::unique_ptr<Plateau> p2 = p.move_block(p.m_blocks_array[0], 1);
 
@@ -192,7 +196,7 @@ bool Plateau::test() {
         p2->load();
 
         for(std::size_t i = 0; i < 36; i++) {
-            if(blocs_map[i] != Plateau::m_collision_array[i]) {
+            if(blocs_map[i] != Plateau::s_collision_array[i]) {
                 nb_erreur++;
                 last_failed = true;
             }
@@ -202,47 +206,26 @@ bool Plateau::test() {
             last_failed = false;
             std::cout << "Le tableau de collision ne correspond pas au tableau chargé\n";
             std::cout << "Données réelles:      collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::m_collision_array);
+            print_debug_tab(blocs_map, Plateau::s_collision_array);
         }
 
         // Test de can_block_move
-        if(!p2->can_block_move(p2->m_blocks_array[0], -1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 devrait pouvoir se déplacer de 1 vers la gauche\n"; 
-        }
-        if(!p2->can_block_move(p2->m_blocks_array[0], -2)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 devrait pouvoir se déplacer de 2 vers la gauche\n"; 
-        }
-        if(p2->can_block_move(p2->m_blocks_array[0], 1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 ne devrait pas pouvoir se déplacer de 1 vers la droite\n"; 
-        }
+        test_can_block_move(*p2, 0, -1, true, nb_erreur);
+        test_can_block_move(*p2, 0, -2, true, nb_erreur);
+        test_can_block_move(*p2, 0, 1, false, nb_erreur);
+        test_can_block_move(*p2, 1, 1, true, nb_erreur);
+        test_can_block_move(*p2, 1, -1, true, nb_erreur);
+        test_can_block_move(*p2, 1, -2, true, nb_erreur);
         
-        if(!p2->can_block_move(p2->m_blocks_array[1], 1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 1 vers le bas\n";
-        }
-        if(!p2->can_block_move(p2->m_blocks_array[1], -1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 1 vers le haut\n";
-        }
-        if(!p2->can_block_move(p2->m_blocks_array[1], -2)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 2 vers le haut\n";
-        }
-
         // Affichage en cas d'erreur
         if(nb_erreur != 0) {
             std::cout << "Données réelles:      Collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::m_collision_array);
+            print_debug_tab(blocs_map, Plateau::s_collision_array);
         }
     }
     
-    std::cout << "Deuxième test réussi\n";
     // On fait remonter le bloc 1
     std::unique_ptr<Plateau> p3 = p2->move_block(p2->m_blocks_array[1], -1);
-
 
     // Test move block
     if(p3->m_blocks_array[0].get_raw() != p2->m_blocks_array[0].get_raw()) {
@@ -260,7 +243,7 @@ bool Plateau::test() {
         p3->load();
 
         for(std::size_t i = 0; i < 36; i++) {
-            if(blocs_map[i] != Plateau::m_collision_array[i]) {
+            if(blocs_map[i] != Plateau::s_collision_array[i]) {
                 nb_erreur++;
                 last_failed = true;
             }
@@ -270,40 +253,21 @@ bool Plateau::test() {
             last_failed = false;
             std::cout << "Le tableau de collision ne correspond pas au tableau chargé\n";
             std::cout << "Données réelles:      collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::m_collision_array);
+            print_debug_tab(blocs_map, Plateau::s_collision_array);
         }
 
         // Test de can_block_move
-        if(!p3->can_block_move(p3->m_blocks_array[0], -1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 devrait pouvoir se déplacer de 1 vers la gauche\n"; 
-        }
-        if(!p3->can_block_move(p3->m_blocks_array[0], -2)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 devrait pouvoir se déplacer de 2 vers la gauche\n"; 
-        }
-        if(p3->can_block_move(p3->m_blocks_array[0], 1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 0 ne devrait pas pouvoir se déplacer de 1 vers la droite\n"; 
-        }
-        
-        if(!p3->can_block_move(p3->m_blocks_array[1], 1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 1 vers le bas\n";
-        }
-        if(!p3->can_block_move(p3->m_blocks_array[1], 2)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 2 vers le bas\n";
-        }
-        if(!p3->can_block_move(p3->m_blocks_array[1], -1)) {
-            nb_erreur++;
-            std::cout << "Le bloc d'index 1 devrait pouvoir se déplacer de 1 vers le haut\n";
-        }
+        test_can_block_move(*p3, 0, -1, true, nb_erreur);
+        test_can_block_move(*p3, 0, -2, true, nb_erreur);
+        test_can_block_move(*p3, 0, 1, false, nb_erreur);
+        test_can_block_move(*p3, 1, 1, true, nb_erreur);
+        test_can_block_move(*p3, 1, 2, true, nb_erreur);
+        test_can_block_move(*p3, 1, -1, true, nb_erreur);
 
         // Affichage en cas d'erreur
         if(nb_erreur != 0) {
             std::cout << "Données réelles:      Collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::m_collision_array);
+            print_debug_tab(blocs_map, Plateau::s_collision_array);
         }
     }
 

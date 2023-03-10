@@ -66,19 +66,18 @@ private:
     /**
      * @brief Tableau de booléens représentant si la case est occupée par un bloc ou non
      */
-    static bool m_collision_array[36];
+    static bool s_collision_array[36];
 
     /**
      * @brief Pointeur sur le plateau chargé
      * 
      */
-    static Plateau* m_loaded_plateau;
+    static Plateau* s_loaded_plateau;
     
     /**
      * @brief Vérifie si un bloc peut se déplacer d'une certaine distance
      * Suppose que les déplacements antérieurs sont possible.
      *   Ne vérifie que si l'extrémité du bloc arrive sur une case vide.
-     *   Ne vérifie pas si le déplacement envoie le bloc en dehors de la map
      * @param block Une référence sur un bloc
      * @param displacement La distance à laquelle se déplacer
      *      <0 : Coin supérieur gauche
@@ -101,6 +100,8 @@ private:
     static std::unique_ptr<Plateau> move_block(Bloc& block, int displacement);
 
     static void clear_collision_array();
+
+    static void test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur);
 };
 
 #endif
