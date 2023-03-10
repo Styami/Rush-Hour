@@ -43,11 +43,39 @@ void Plateau::load() {
     }
 }
 
-bool Plateau::can_block_move(const Bloc& block, int displacement) {
-    int2 coords = block.get_coord();
+// Algorithme:
+// On va itérer sur tous les blocs du plateau.
+// Si on peut déplacer le bloc, alors on crée un nouveau plateau qui devient
+// voisin de la configuration actuelle.
+// Si on ne peut plus déplacer le bloc, on recommence dans la direction opposé
+std::vector<std::unique_ptr<Plateau>> Plateau::get_neighbours() {
+    load();
 
-    int offset = displacement + (displacement > 0 ? block.get_size() - 1 : 0);
-    if(block.get_orientation() == Orientation::horizontal)
+    std::vector<std::unique_ptr<Plateau>> res;
+    int displacement;
+
+    for(std::size_t block_i = 0; block_i < m_blocks_count; block_i++) {
+        displacement = 1;
+        while(can_block_move(block_i, displacement)) {
+            res.push_back(move_block(block_i, displacement));
+            displacement++;
+        }
+        displacement = -1;
+        while(can_block_move(block_i, displacement)) {
+            res.push_back(move_block(block_i, displacement));
+            displacement--;
+        }
+    }
+    
+    return res;
+}
+
+bool Plateau::can_block_move(int block_index, int displacement) {
+    Bloc& b = s_loaded_plateau->m_blocks_array[block_index];
+    int2 coords = b.get_coord();
+
+    int offset = displacement + (displacement > 0 ? b.get_size() - 1 : 0);
+    if(b.get_orientation() == Orientation::horizontal)
         coords.x += offset;
     else
         coords.y += offset;
@@ -58,23 +86,20 @@ bool Plateau::can_block_move(const Bloc& block, int displacement) {
     return !s_collision_array[coords.x + coords.y * 6];
 }
 
-std::unique_ptr<Plateau> Plateau::move_block(Bloc& block, int displacement) {
+std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) {
     std::vector<Bloc> res;
-    int2 new_coord = block.get_coord();
-    int2 prev_coord = block.get_coord();
+    Bloc& b = s_loaded_plateau->m_blocks_array[block_index];
+    int2 new_coord = b.get_coord();
     
-    if(block.get_orientation() == Orientation::horizontal)
+    if(b.get_orientation() == Orientation::horizontal)
         new_coord.x += displacement;
     else
         new_coord.y += displacement;
     
-    // Déplace le block
-    block.set_coord(new_coord);
     for(std::size_t i = 0; i < s_loaded_plateau->m_blocks_count; i++) {
         res.push_back(s_loaded_plateau->m_blocks_array[i]);
     }
-    // Puis le remet dans l'état inital
-    block.set_coord(prev_coord);
+    res[block_index].set_coord(new_coord);
 
     return make_unique<Plateau>(res);
 }
@@ -117,7 +142,7 @@ void static print_debug_tab(bool* blocs_map, bool* collision_array) {
 }
 
 void Plateau::test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur) {
-    if(p.can_block_move(p.m_blocks_array[index], displacement) != expected_result) {
+    if(p.can_block_move(index, displacement) != expected_result) {
         nb_erreur++;
         std::cout << "Le bloc d'index " << index << 
             (expected_result == false ? "ne" : "") <<
@@ -178,7 +203,7 @@ bool Plateau::test() {
         }
     }
 
-    std::unique_ptr<Plateau> p2 = p.move_block(p.m_blocks_array[0], 1);
+    std::unique_ptr<Plateau> p2 = p.move_block(0, 1);
 
     // Test move block
     if(p2->m_blocks_array[0].get_raw() != p.m_blocks_array[0].get_raw() + 0b00100000) {
@@ -225,7 +250,7 @@ bool Plateau::test() {
     }
     
     // On fait remonter le bloc 1
-    std::unique_ptr<Plateau> p3 = p2->move_block(p2->m_blocks_array[1], -1);
+    std::unique_ptr<Plateau> p3 = p2->move_block(1, -1);
 
     // Test move block
     if(p3->m_blocks_array[0].get_raw() != p2->m_blocks_array[0].get_raw()) {

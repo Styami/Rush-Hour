@@ -34,16 +34,11 @@ public:
     ~Plateau();
 
     /**
-     * @brief Défini le plateau comme actif vis à vis des tests de collisions et récupération des voisins.
-     */
-    void load();
-
-    /**
      * @brief Renvoie une liste de toutes les configurations de plateau accessible depuis celui ci.
      * 
-     * @return std::vector<Plateau*> Liste de configuration de plateau 
+     * @return std::vector<std::unique_ptr<Plateau>> Liste de configuration de plateau 
      */
-    std::vector<Plateau*> get_neighbours();
+    std::vector<std::unique_ptr<Plateau>> get_neighbours();
 
     /**
      * @brief Fonction de test
@@ -75,6 +70,11 @@ private:
     static Plateau* s_loaded_plateau;
     
     /**
+     * @brief Défini le plateau comme actif vis à vis des tests de collisions et récupération des voisins.
+     */
+    void load();
+
+    /**
      * @brief Vérifie si un bloc peut se déplacer d'une certaine distance
      * Suppose que les déplacements antérieurs sont possible.
      *   Ne vérifie que si l'extrémité du bloc arrive sur une case vide.
@@ -85,7 +85,7 @@ private:
      * @return true Le bloc peut se déplacer
      * @return false Le bloc ne peut pas se déplacer
      */
-    static bool can_block_move(const Bloc& block, int displacement);
+    static bool can_block_move(int block_index, int displacement);
 
     /**
      * @brief Renvoie un pointeur sur plateau dans la nouvelle configuration (après déplacement)
@@ -97,7 +97,7 @@ private:
      *      >0 : Coin inférieur droit
      * @return std::weak_ptr<Plateau> 
      */
-    static std::unique_ptr<Plateau> move_block(Bloc& block, int displacement);
+    static std::unique_ptr<Plateau> move_block(int block_index, int displacement);
 
     static void clear_collision_array();
 
