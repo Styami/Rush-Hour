@@ -1,18 +1,20 @@
 #include "Sommets.hpp"
-#include <cstddef>
-#include <cstdlib>
-#include <time.h>
 
 
 template<class T>
-Sommets<T>::Sommets(T element){
-    m_element=element;
+Sommets<T>::Sommets(T element) :
+    m_element(element)
+{}
+
+template<class T>
+void Sommets<T>::link(Sommets<T>* som){
+    m_voisins.push_back(som);
+    som->m_voisins.push_back(this);
 }
 
-template<class T>
-void Sommets<T>::link(Sommets<T> som){
-    m_voisins.push_back(som);
-    som.push_back(m_voisins);
+template <class T>
+T Sommets<T>::get_element(){
+    return m_element;
 }
 
 template<class T>
@@ -23,3 +25,4 @@ Sommets<T> Sommets<T>::generer(){
     // }
     
 }
+

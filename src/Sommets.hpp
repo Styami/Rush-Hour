@@ -10,14 +10,16 @@ class Sommets{
     private:
         T m_element;
     public:
-        vector<Sommets<T>> m_voisins;
         Sommets(T element);
 
-        void link(Sommets<T> som);
+        vector<Sommets<T>*> m_voisins;
+        void link(Sommets<T>* som);
 
         Sommets<T> generer();
 
+        T get_element();
+        bool m_traite=false;
         
 };
-
+#include "Sommets.cpp"
 #endif
