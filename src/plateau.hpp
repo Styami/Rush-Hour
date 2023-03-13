@@ -19,17 +19,26 @@
 class Plateau {
 public:
     /**
-     * @brief Constructeur pour les tests, ne sera pas utilisé dans la version finale
-     * @param nb_blocks Nombre de blocs à créer
-     */
-    Plateau(std::size_t nb_blocks);
-
-    /**
      * @brief Construit un plateau à partir des blocs passé en paramètre.
      * 
      * @param blocks 
      */
     Plateau(std::vector<Bloc> blocks);
+
+    /**
+     * @brief Construit un plateau en déplacant les données de celui passé en paramètre
+     * 
+     * @param p 
+     */
+    Plateau(Plateau&& p);
+
+    /**
+     * @brief Opérateur d'assignement par déplacement
+     * 
+     * @param p 
+     * @return Plateau 
+     */
+    Plateau& operator=(Plateau&& p);
 
     ~Plateau();
 
@@ -49,6 +58,12 @@ public:
     static bool test();
 
 private:
+    /**
+     * @brief Constructeur pour les tests, ne sera pas utilisé dans la version finale
+     * @param nb_blocks Nombre de blocs à créer
+     */
+    Plateau(std::size_t nb_blocks);
+
     /** @brief Tableau de blocs composant le plateau de jeu
      */
     Bloc* m_blocks_array;

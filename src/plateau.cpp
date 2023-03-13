@@ -16,6 +16,26 @@ Plateau::Plateau(std::vector<Bloc> blocks) :
         m_blocks_array[i++].set_data(b.get_raw());
 }
 
+Plateau::Plateau(Plateau&& p) :
+    m_blocks_array(std::move(p.m_blocks_array)), m_blocks_count(std::move(p.m_blocks_count))
+{
+    p.m_blocks_array = nullptr;
+    p.m_blocks_count = 0;
+}
+
+Plateau& Plateau::operator=(Plateau&& p) {
+    if(&p != this) {
+        delete [] m_blocks_array;
+
+        m_blocks_array = std::move(p.m_blocks_array);
+        m_blocks_count = std::move(p.m_blocks_count);
+
+        p.m_blocks_array = nullptr;
+        p.m_blocks_count = 0;
+    }
+    return *this;
+}
+
 Plateau::~Plateau() {
     delete [] m_blocks_array;
 }
@@ -203,7 +223,7 @@ bool Plateau::test() {
         }
     }
 
-    std::unique_ptr<Plateau> p2 = p.move_block(0, 1);
+    std::unique_ptr<Plateau> p2 = std::move(p.move_block(0, 1));
 
     // Test move block
     if(p2->m_blocks_array[0].get_raw() != p.m_blocks_array[0].get_raw() + 0b00100000) {
