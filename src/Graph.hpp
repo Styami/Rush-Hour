@@ -1,24 +1,26 @@
 #ifndef __GRAPH__
 #define __GRAPH__
-#include <stack>
+#include <queue>
 #include <vector>
+#include <iostream>
+#include "Sommets.hpp"
 
 using namespace std;
 
 template <class T>
 class Graph{
     private:
-        vector<T> m_noeud;
-        stack<T> m_trait_noeud;
+        vector<Sommets<T>*> m_noeud;
+        queue<Sommets<T>*> m_file_noeud;
 
     public:
-        Graph();
+        Graph(vector<Sommets<T>*> init_val);
 
-        void parcours();
+        void parcours(T val);
 
 };
 
 
 
-
+#include "Graph.cpp"
 #endif
