@@ -1,26 +1,29 @@
 #include "plateau.hpp"
 #include "bloc.hpp"
 
-bool Plateau::s_collision_array[36]{0};
+uint64_t Plateau::s_plateau_data = 0;
 Plateau* Plateau::s_loaded_plateau = nullptr;
 
 Plateau::Plateau(std::size_t nb_blocks) :
-    m_blocks_array(new Bloc[nb_blocks]), m_blocks_count(nb_blocks)
-{}
+    m_blocks_array(new Bloc[nb_blocks])
+{
+    set_block_count(nb_blocks);
+}
 
 Plateau::Plateau(std::vector<Bloc> blocks) :
-    m_blocks_array(new Bloc[blocks.size()]), m_blocks_count(blocks.size())
+    m_blocks_array(new Bloc[blocks.size()])
 {
+    Plateau::set_block_count(blocks.size());
+
     int i = 0;
     for(Bloc b : blocks)
         m_blocks_array[i++].set_data(b.get_raw());
 }
 
 Plateau::Plateau(Plateau&& p) :
-    m_blocks_array(std::move(p.m_blocks_array)), m_blocks_count(std::move(p.m_blocks_count))
+    m_blocks_array(std::move(p.m_blocks_array))
 {
     p.m_blocks_array = nullptr;
-    p.m_blocks_count = 0;
 }
 
 Plateau& Plateau::operator=(Plateau&& p) {
@@ -28,10 +31,8 @@ Plateau& Plateau::operator=(Plateau&& p) {
         delete [] m_blocks_array;
 
         m_blocks_array = std::move(p.m_blocks_array);
-        m_blocks_count = std::move(p.m_blocks_count);
 
         p.m_blocks_array = nullptr;
-        p.m_blocks_count = 0;
     }
     return *this;
 }
@@ -41,19 +42,60 @@ Plateau::~Plateau() {
 }
 
 void Plateau::clear_collision_array() {
-    for(int i = 0 ; i < 36; i++)
-        s_collision_array[i] = false;
+    s_plateau_data &= 0xfffffff000000000;
+}
+
+void Plateau::add_collision(int2 pos) {
+    uint64_t encoded_pos = 1;
+    encoded_pos <<= pos.y * 6;
+    encoded_pos <<= pos.x;
+    s_plateau_data |= encoded_pos;
+}
+
+bool Plateau::test_collision(int2 pos) {
+    uint64_t encoded_pos = 1;
+    encoded_pos <<= pos.y * 6;
+    encoded_pos <<= pos.x;
+    return (bool)(encoded_pos & s_plateau_data);
+}
+
+bool Plateau::test_collision(int index) {
+    uint64_t encoded_pos = 1;
+    encoded_pos <<= index;
+    return (bool)(encoded_pos & s_plateau_data); 
+}
+
+void Plateau::set_block_count(uint64_t count) {
+    assert(count > 0 && count <= 16);
+
+    s_plateau_data |= ((count - 1) << 36);
+}
+
+std::size_t Plateau::get_block_count() {
+    // 0x000000f000000000 correspond aux bits 36 à 39
+    return (std::size_t)((s_plateau_data & 0x000000f000000000) >> 36) + 1;
+}
+
+void Plateau::set_winning_block(uint64_t index) {
+    assert(index >= 0 && index < 16);
+
+    s_plateau_data |= (index << 40);
+}
+
+std::size_t Plateau::get_winning_block() {
+    // 0x00000f0000000000 correspond aux bits 40 à 43
+    return (std::size_t)((s_plateau_data & 0x00000f0000000000) >> 40);
 }
 
 void Plateau::load() {
     s_loaded_plateau = this;
     clear_collision_array();
 
-    for(std::size_t i = 0 ; i < m_blocks_count; i++) {
+    for(std::size_t i = 0 ; i < get_block_count(); i++) {
         int2 coords = m_blocks_array[i].get_coord();
 
         for(int j = 0; j < m_blocks_array[i].get_size(); j++) {
-            s_collision_array[coords.x + coords.y * 6] = true;
+            add_collision(coords);
             
             if(m_blocks_array[i].get_orientation() == Orientation::horizontal)
                 coords.x++;
@@ -74,7 +116,7 @@ std::vector<std::unique_ptr<Plateau>> Plateau::get_neighbours() {
     std::vector<std::unique_ptr<Plateau>> res;
     int displacement;
 
-    for(std::size_t block_i = 0; block_i < m_blocks_count; block_i++) {
+    for(std::size_t block_i = 0; block_i < get_block_count(); block_i++) {
         displacement = 1;
         while(can_block_move(block_i, displacement)) {
             res.push_back(move_block(block_i, displacement));
@@ -103,7 +145,7 @@ bool Plateau::can_block_move(int block_index, int displacement) {
     if(coords.x < 0 || coords.y < 0 || coords.x > 5 || coords.y > 5)
         return false;
 
-    return !s_collision_array[coords.x + coords.y * 6];
+    return !test_collision(coords);
 }
 
 std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) {
@@ -116,7 +158,7 @@ std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) 
     else
         new_coord.y += displacement;
     
-    for(std::size_t i = 0; i < s_loaded_plateau->m_blocks_count; i++) {
+    for(std::size_t i = 0; i < get_block_count(); i++) {
         res.push_back(s_loaded_plateau->m_blocks_array[i]);
     }
     res[block_index].set_coord(new_coord);
@@ -149,7 +191,13 @@ void static load_blocs_map(bool* arr, const Bloc* p, std::size_t p_size) {
     }
 }
 
-void static print_debug_tab(bool* blocs_map, bool* collision_array) {
+void Plateau::get_collision_array(bool* array) {
+    for(int i = 0; i < 36; i++) {
+        array[i] = test_collision(i);
+    } 
+}
+
+static void print_debug_tab(bool* blocs_map, bool* collision_array) {
     for(int j = 0; j < 6; j++) {
         std::cout << " ";
         for(int i = 0; i < 6; i++)
@@ -178,10 +226,7 @@ void Plateau::test_can_block_move(const Plateau& p, int index, int displacement,
 }
 
 bool Plateau::operator==(const Plateau& p) const {
-    if(m_blocks_count != p.m_blocks_count)
-        return false;
-
-    for(int i = 0; i < m_blocks_count; i++) {
+    for(std::size_t i = 0; i < get_block_count(); i++) {
         if(m_blocks_array[i].get_raw() != p.m_blocks_array[i].get_raw())
             return false;
     }
@@ -196,7 +241,7 @@ std::size_t Plateau::hash() const {
 
     std::hash<char> hasher;
     std::size_t new_hash = 0;
-    for(int i = 0; i < m_blocks_count; i++) {
+    for(std::size_t i = 0; i < get_block_count(); i++) {
         new_hash ^= hasher(m_blocks_array[i].get_raw()) + 0xf2ae2ba4 + (new_hash << 6) + (new_hash >> 2);
     }
     return new_hash;
@@ -208,19 +253,21 @@ bool Plateau::test() {
 
     Plateau p(2);
     bool blocs_map[36]{0};
+    bool collision_array[36];
 
     p.m_blocks_array[0].set_data(1, 2, false, Orientation::horizontal);
     p.m_blocks_array[1].set_data(4, 2, true, Orientation::vertical);
 
     {
         // Création du tableau de bloc
-        load_blocs_map(blocs_map, p.m_blocks_array, p.m_blocks_count);
+        load_blocs_map(blocs_map, p.m_blocks_array, get_block_count());
 
         // Test load
         p.load();
+        get_collision_array(collision_array);
 
         for(std::size_t i = 0; i < 36; i++) {
-            if(blocs_map[i] != Plateau::s_collision_array[i]) {
+            if(blocs_map[i] != test_collision(i)) {
                 nb_erreur++;
                 last_failed = true;
             }
@@ -230,7 +277,7 @@ bool Plateau::test() {
             last_failed = false;
             std::cout << "Le tableau de collision ne correspond pas au tableau chargé\n";
             std::cout << "Données réelles:      collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::s_collision_array);
+            print_debug_tab(blocs_map, collision_array);
         }
 
         // Test de can_block_move
@@ -244,7 +291,7 @@ bool Plateau::test() {
         // Affichage en cas d'erreur
         if(nb_erreur != 0) {
             std::cout << "Données réelles:      Collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::s_collision_array);
+            print_debug_tab(blocs_map, collision_array);
         }
     }
 
@@ -260,13 +307,14 @@ bool Plateau::test() {
  
     {
         // Création du tableau de bloc
-        load_blocs_map(blocs_map, p2->m_blocks_array, p2->m_blocks_count);
+        load_blocs_map(blocs_map, p2->m_blocks_array, get_block_count());
 
         // Test load
         p2->load();
+        get_collision_array(collision_array);
 
         for(std::size_t i = 0; i < 36; i++) {
-            if(blocs_map[i] != Plateau::s_collision_array[i]) {
+            if(blocs_map[i] != test_collision(i)) {
                 nb_erreur++;
                 last_failed = true;
             }
@@ -276,7 +324,7 @@ bool Plateau::test() {
             last_failed = false;
             std::cout << "Le tableau de collision ne correspond pas au tableau chargé\n";
             std::cout << "Données réelles:      collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::s_collision_array);
+            print_debug_tab(blocs_map, collision_array);
         }
 
         // Test de can_block_move
@@ -290,7 +338,7 @@ bool Plateau::test() {
         // Affichage en cas d'erreur
         if(nb_erreur != 0) {
             std::cout << "Données réelles:      Collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::s_collision_array);
+            print_debug_tab(blocs_map, collision_array);
         }
     }
     
@@ -307,13 +355,14 @@ bool Plateau::test() {
 
     {
         // Création du tableau de bloc
-        load_blocs_map(blocs_map, p3->m_blocks_array, p3->m_blocks_count);
+        load_blocs_map(blocs_map, p3->m_blocks_array, get_block_count());
 
         // Test load
         p3->load();
+        get_collision_array(collision_array);
 
         for(std::size_t i = 0; i < 36; i++) {
-            if(blocs_map[i] != Plateau::s_collision_array[i]) {
+            if(blocs_map[i] != test_collision(i)) {
                 nb_erreur++;
                 last_failed = true;
             }
@@ -323,7 +372,7 @@ bool Plateau::test() {
             last_failed = false;
             std::cout << "Le tableau de collision ne correspond pas au tableau chargé\n";
             std::cout << "Données réelles:      collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::s_collision_array);
+            print_debug_tab(blocs_map, collision_array);
         }
 
         // Test de can_block_move
@@ -337,7 +386,7 @@ bool Plateau::test() {
         // Affichage en cas d'erreur
         if(nb_erreur != 0) {
             std::cout << "Données réelles:      Collision arr:\n";
-            print_debug_tab(blocs_map, Plateau::s_collision_array);
+            print_debug_tab(blocs_map, collision_array);
         }
     }
 

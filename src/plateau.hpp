@@ -103,21 +103,26 @@ private:
     Bloc* m_blocks_array;
 
     /**
-     * @brief Stock le nombre de blocs contenu dans le plateau de jeu
+     * @brief Condense les informations relatives aux plateaux de jeu
+     * Le nombre de bloc total (1 minimum et 16 maximum)
+     * L'index du bloc à faire sortir (compris entre 0 et 15)
+     * Le tableau de collision pour faire les tests plus rapidement
+     *
+     * La porte de sortie sera déduite de la position du bloc à faire sortir
+     *      puisqu'elle sera forcément sur le bord droit.
+     *
+     * 0-35 : Tableau de collision
+     * 36-39 : Nombre de blocs
+     * 40-43 : Index du bloc à sortir
      */
-    std::size_t m_blocks_count;
-
-    /**
-     * @brief Tableau de booléens représentant si la case est occupée par un bloc ou non
-     */
-    static bool s_collision_array[36];
+    static uint64_t s_plateau_data;
 
     /**
      * @brief Pointeur sur le plateau chargé
      * 
      */
     static Plateau* s_loaded_plateau;
-    
+
     /**
      * @brief Défini le plateau comme actif vis à vis des tests de collisions et récupération des voisins.
      */
@@ -150,7 +155,56 @@ private:
 
     static void clear_collision_array();
 
+    /**
+     * @brief Ajoute une collision sur la case désignée.
+     *  Écrit cette information sur s_plateau_data
+     * @param pos Coordonnée de la case
+     */
+    static void add_collision(int2 pos);
+
+    /**
+     * @brief Test si la case est occupé par un bloc
+     *  Lit cette information depuis s_plateau_data
+     * @param pos Coordonnée de la case a tester
+     */
+    static bool test_collision(int2 pos);
+    static bool test_collision(int index);
+
+    /**
+     * @brief Stock le nombre de bloc du plateau
+     *  Écrit cette information sur s_plateau_data
+     * @param count Nombre de bloc
+     */
+    static void set_block_count(uint64_t count);
+
+    /**
+     * @brief Renvoie le nombre de bloc dans le plateau
+     *  Lit cette information depuis s_plateau_data
+     * @return std::size_t 
+     */
+    static std::size_t get_block_count();
+
+    /**
+     * @brief Stock l'index du bloc à sortir
+     *  Écrit cette information sur s_plateau_data
+     * @param index Index du bloc à sortir
+     */
+    static void set_winning_block(uint64_t index);
+
+    /**
+     * @brief Renvoie l'index du bloc à sortir
+     *  Lit cette information depuis s_plateau_data
+     * @return std::size_t 
+     */
+    static std::size_t get_winning_block();
+
+
+    //     
+    //      Test unitaires
+    // 
+
     static void test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur);
+    static void get_collision_array(bool* array);
 };
 
 #endif
