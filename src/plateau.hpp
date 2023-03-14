@@ -49,6 +49,40 @@ public:
      */
     std::vector<std::unique_ptr<Plateau>> get_neighbours();
 
+
+    // 
+    //     Gestion table de hashage
+    // 
+
+    /**
+     * @brief Opérateur d'égalité utilisé pour la hashmap
+     * 
+     * @param p 
+     * @return true 
+     * @return false 
+     */
+    bool operator==(const Plateau& p) const;
+
+    /**
+     * @brief Fonction de hashage utilisée pour la hashmap
+     * 
+     * @return std::size_t 
+     */
+    std::size_t hash() const;
+
+    struct Thash {
+        std::size_t operator() (const Plateau& p) const { return p.hash();}
+    };
+
+    struct Tequal {
+        bool operator() (const Plateau& a, const Plateau& b) const { return a == b; }
+    };
+
+
+    //     
+    //      Test unitaires
+    // 
+
     /**
      * @brief Fonction de test
      * 

@@ -177,6 +177,31 @@ void Plateau::test_can_block_move(const Plateau& p, int index, int displacement,
     }
 }
 
+bool Plateau::operator==(const Plateau& p) const {
+    if(m_blocks_count != p.m_blocks_count)
+        return false;
+
+    for(int i = 0; i < m_blocks_count; i++) {
+        if(m_blocks_array[i].get_raw() != p.m_blocks_array[i].get_raw())
+            return false;
+    }
+    return true;
+}
+
+std::size_t Plateau::hash() const {
+    // Idée récupérée de Stackoverflow: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
+    //      Solution de Karl von Moor
+    // N'ayant aucune connaissance technique en hashage, nous avons décidé de trouver une solution existante pour 
+    // éviter des cas d'erreur difficilement débuggable
+
+    std::hash<char> hasher;
+    std::size_t new_hash = 0;
+    for(int i = 0; i < m_blocks_count; i++) {
+        new_hash ^= hasher(m_blocks_array[i].get_raw()) + 0xf2ae2ba4 + (new_hash << 6) + (new_hash >> 2);
+    }
+    return new_hash;
+}
+
 bool Plateau::test() {
     int nb_erreur = 0;
     bool last_failed = false;
