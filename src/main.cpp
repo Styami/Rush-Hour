@@ -1,10 +1,18 @@
 #include "Sommets.hpp"
-#include <vector>
 #include "Graph.hpp"
 
+
 int main(){
+    std::srand(std::time(nullptr));
+    int r=rand()%10;
     std::vector<Sommets<int>*> lil_graph;
-    for (int i=0; i<15; i++) {
+    Sommets<int>* init_noeud= new Sommets<int>(r);
+    std::unordered_map<int,Sommets<int>*> lil_graph_map;
+    //(lil_graph.begin(),lil_graph.end());
+    lil_graph_map[r]= init_noeud;
+    Graph<int> graph=Graph(lil_graph_map);
+
+    /*for (int i=0; i<15; i++) {
         lil_graph.push_back(new Sommets<int>(i));
     }
     lil_graph[0]->link(lil_graph[2]);
@@ -17,8 +25,9 @@ int main(){
     lil_graph[10]->link(lil_graph[11]);
     lil_graph[11]->link(lil_graph[12]);
     lil_graph[13]->link(lil_graph[13]);
-    lil_graph[13]->link(lil_graph[14]);
-    Graph<int> graph= Graph(lil_graph);
-    graph.parcours(6);
+    lil_graph[13]->link(lil_graph[14]);*/
+    //Graph<int> graph= Graph(lil_graph, lil_graph_map);
+    graph.parcours(5);
+    
     return 0;
 }
