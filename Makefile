@@ -1,8 +1,12 @@
 #all: bin/exec
 
+#Debug
+bin/exec_debug: obj/main.o
+	g++ -g -Wall -o bin/exec_debug obj/main.o
+
 # Executable
 bin/exec: obj/main.o
-	g++  -g -Wall -o bin/exec obj/main.o 
+	g++ -Wall -o bin/exec obj/main.o 
 
 bin/test: obj/test.o obj/bloc.o obj/utils.o
 	g++ -Wall -o $@ $^
