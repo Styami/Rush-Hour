@@ -1,6 +1,5 @@
 #include "Sommets.hpp"
 
-
 template<class T>
 Sommets<T>::Sommets(T element) :
     m_element(element)
@@ -18,11 +17,12 @@ T Sommets<T>::get_element(){
 }
 
 template<class T>
-Sommets<T> Sommets<T>::generer(){
-    // srand(time(NULL));
-    // for (int i=0; i<3; i++) {
-    //     voisins.push_back(rand() % 100);
-    // }
-    
+std::vector<Sommets<T>*> Sommets<T>::generer(){
+    std::srand(std::time(nullptr));
+    std::vector<Sommets<T>*> tmp;
+    for(int i=0; i<3; i++){
+        tmp.push_back(new Sommets<T>(rand()%10));
+    }
+    return tmp;
 }
 

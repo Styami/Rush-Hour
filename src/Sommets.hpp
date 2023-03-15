@@ -2,8 +2,9 @@
 #define __SOMMETS__
 #include <stack>
 #include <vector>
+#include <ctime>
+#include <cstdlib>
 
-using namespace std;
 
 template<class T>
 class Sommets{
@@ -12,10 +13,11 @@ class Sommets{
     public:
         Sommets(T element);
 
-        vector<Sommets<T>*> m_voisins;
+        std::vector<Sommets<T>*> m_voisins;
+        
         void link(Sommets<T>* som);
 
-        Sommets<T> generer();
+        std::vector<Sommets<T>*> generer();
 
         T get_element();
         bool m_traite=false;
