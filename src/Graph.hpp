@@ -4,19 +4,23 @@
 #include <vector>
 #include <iostream>
 #include "Sommets.hpp"
+#include <unordered_map>
 
-using namespace std;
+
 
 template <class T>
 class Graph{
     private:
-        vector<Sommets<T>*> m_noeud;
-        queue<Sommets<T>*> m_file_noeud;
+        Sommets<T>* m_noeud;
+        std::unordered_map<T,Sommets<T>*> m_hash_map;
+        std::queue<Sommets<T>*> m_file_noeud;
 
     public:
-        Graph(vector<Sommets<T>*> init_val);
+        Graph(/*std::vector<Sommets<T>*> init_val,*/ std::unordered_map<T, Sommets<T>*> map_init);
 
         void parcours(T val);
+        void generer(Sommets<T>* val);
+        bool insertion(T val);
 
 };
 
