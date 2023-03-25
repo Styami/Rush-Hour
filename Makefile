@@ -13,7 +13,7 @@ bin/test: obj/test.o obj/bloc.o obj/utils.o
 
 # Objets
 
-obj/main.o: src/main.cpp
+obj/main.o: src/main.cpp src/Graph.tpp src/Graph.hpp src/Sommets.tpp src/Sommets.hpp
 	g++ -c -Wall -o $@ $<
 
 obj/test.o: src/test.cpp

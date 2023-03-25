@@ -4,24 +4,24 @@
 #include <vector>
 #include <ctime>
 #include <cstdlib>
-
+#include <assert.h>
 
 template<class T>
 class Sommets{
     private:
         T m_element;
     public:
+        bool m_traite;
+        std::vector<Sommets<T>*> m_voisins;
         Sommets(T element);
 
-        std::vector<Sommets<T>*> m_voisins;
-        
         void link(Sommets<T>* som);
-
-        std::vector<Sommets<T>*> generer();
-
+        std::vector<Sommets<T>*> generer(int nb_voisins);
         T get_element();
-        bool m_traite=false;
+        static void test();
+
+        ~Sommets();
         
 };
-#include "Sommets.cpp"
+#include "Sommets.tpp"
 #endif
