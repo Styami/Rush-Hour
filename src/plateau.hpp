@@ -49,6 +49,11 @@ public:
      */
     std::vector<std::unique_ptr<Plateau>> get_neighbours();
 
+    /**
+     * @brief Renvoie vrai si le plateau actuel est gagnant
+     * 
+     */
+    bool est_gagnant();
 
     // 
     //     Gestion table de hashage
@@ -194,7 +199,7 @@ private:
     /**
      * @brief Renvoie l'index du bloc à sortir
      *  Lit cette information depuis s_plateau_data
-     * @return std::size_t 
+     * @return std::size_t index du bloc gagnant
      */
     static std::size_t get_winning_block();
 
