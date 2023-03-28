@@ -132,6 +132,13 @@ std::vector<std::unique_ptr<Plateau>> Plateau::get_neighbours() {
     return res;
 }
 
+bool Plateau::est_gagnant() {
+    const Bloc& winning_bloc = m_blocks_array[get_winning_block()];
+    if(winning_bloc.get_coord().x + winning_bloc.get_size() >= 6)
+        return true;
+    return false;
+}
+
 bool Plateau::can_block_move(int block_index, int displacement) {
     Bloc& b = s_loaded_plateau->m_blocks_array[block_index];
     int2 coords = b.get_coord();
