@@ -7,22 +7,21 @@
 
 
 
-template <class T>
+
 class Graph{
     private:
-        Sommets<T>* m_noeud;
-        std::unordered_map<T,Sommets<T>*> m_hash_map;
-        std::queue<Sommets<T>*> m_file_noeud;
+        Sommets* m_noeud;
+        std::unordered_map<const Plateau&,Sommets*, Plateau::Thash, Plateau::Tequal> m_hash_map;
+        std::queue<Sommets*> m_file_noeud;
 
+        void generer(Sommets* node);
     public:
-        Graph(Sommets<T>* node);
+        Graph(Sommets* node);
 
-        void parcours(T val, int nb_voisins);
-        void generer(Sommets<T>* node, int nb_voisins);
+        const Sommets* parcours();
         static void test();
 
         ~Graph();
 
 };
-#include "Graph.tpp"
 #endif
