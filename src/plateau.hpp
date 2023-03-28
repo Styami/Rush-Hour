@@ -53,7 +53,7 @@ public:
      * @brief Renvoie vrai si le plateau actuel est gagnant
      * 
      */
-    bool est_gagnant();
+    bool est_gagnant() const;
 
     // 
     //     Gestion table de hashage
