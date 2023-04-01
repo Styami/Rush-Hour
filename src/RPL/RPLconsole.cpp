@@ -1,16 +1,14 @@
 #include "RPLconsole.h"
 
-
 using namespace std;
-using namespace RPL;
+
+namespace RPL {
 
 
-consoleWindow::consoleWindow(unsigned int w, unsigned int h, string _title, int console_mode, int _framerate) :
-    dimx(w), dimy(h), window(new Cell[w * h]), current_color(), current_color_mode(38), framerate(_framerate)
+consoleWindow::consoleWindow(unsigned int w, unsigned int h, const string& _title, unsigned char console_mode, int _framerate) :
+    dimx(w), dimy(h), window(new Cell[w * h]), current_color(), current_color_mode(38), framerate(_framerate), title(_title)
 {
     termInit();
-
-    //draw_logo();
 
     for(int i = 0; i < dimx*dimy; i++) {
         window[i].c = ' ';
@@ -18,21 +16,18 @@ consoleWindow::consoleWindow(unsigned int w, unsigned int h, string _title, int 
         window[i].col_mode = 38;
     }
 
-    if((console_mode & CONSOLE_COMPACT) > 0) {
+    if(console_mode & CONSOLE_COMPACT) {
         spaced = false;
     }
-    else if((console_mode & CONSOLE_SPACED) > 0) {
+    if(console_mode & CONSOLE_SPACED) {
         spaced = true;
     }
-    if((console_mode & CONSOLE_BORDERLESS) > 0) {
+    if(console_mode & CONSOLE_BORDERLESS) {
         bordered = false;
     }
-    else if((console_mode & CONSOLE_BORDERED) > 0) {
+    if(console_mode & CONSOLE_BORDERED) {
         bordered = true;
-        title = _title.c_str();
-        title_length = _title.length();
     }
-    
 
 }
 
@@ -56,18 +51,18 @@ void consoleWindow::draw_window() const{
 
     //Dessine le haut de la bordure
     if(bordered) {
-        printf("┌%s", title);
+        printf("┌%s", title.c_str());
         
-        for(i = 0; i < dimx * (spaced ? 2 : 1) - title_length; i++) {
+        for(i = 0; i < dimx * (spaced ? 2 : 1) - title.length(); i++) {
             
-            printf("%s", "─");
+            printf("─");
         }
-        printf("┐%c", '\n');
+        printf("┐\n");
     }
 
 
     for(j= 0; j < dimy; j++) {
-        printf("%s", "│");
+        if(bordered) printf("│");
         for(i = 0; i < dimx; i++) {
             printf("\e[%u;2;%u;%u;%um%c%c\e[0m", 
                 window[i + j * dimx].col_mode,  //%u
@@ -78,7 +73,7 @@ void consoleWindow::draw_window() const{
                 (spaced ? ' ' : '\0')           //%c
             );
         }
-        printf("%s", "│");
+        if(bordered) printf("│");
         printf("\n");
     }
 
@@ -86,11 +81,10 @@ void consoleWindow::draw_window() const{
     if(bordered) {
         printf("└");
         for(i = 0; i < dimx  * (spaced ? 2 : 1); i++) {
-            printf("%s", "─");
+            printf("─");
         }
-        printf("┘%c", '\n');
+        printf("┘\n");
     }
-    
 }
 
 void consoleWindow::set_color(unsigned char r, unsigned char g, unsigned char b) {
@@ -196,4 +190,5 @@ void consoleWindow::termInit() {
     tcgetattr(STDIN_FILENO, &t);
     t.c_lflag |= ~ECHO;
     tcsetattr(STDIN_FILENO, TCSANOW, &t);
+}
 }

@@ -22,7 +22,7 @@ int main(void) {
 
 
     std::cout << "Appuyer sur une touche pour lancer l'affichage d'un plateau\n";
-    //getchar();
+    getchar();
 
     Window::test();
 

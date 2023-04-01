@@ -39,7 +39,7 @@ public:
      * @param w largeur de la fenetre
      * @param h hauteur de la fenetre
      */
-    consoleWindow(unsigned int w, unsigned int h, std::string title="", int console_mode = 0, int _framerate = 60);
+    consoleWindow(unsigned int w, unsigned int h, const std::string& title="", unsigned char console_mode = 0, int _framerate = 60);
 
     /**
      * @brief Détruit la fenetre et libère la mémoire
@@ -162,10 +162,7 @@ private:
     bool bordered;
 
     ///Titre de la fenetre
-    const char* title;
-
-    //Longueur du titre
-    int title_length;
+    std::string title;
 
     /**
      * @brief Rempli le buffer par le logo et l'affiche

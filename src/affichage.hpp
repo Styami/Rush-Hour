@@ -9,12 +9,6 @@ public:
     Window();
 
     /**
-     * @brief Clear la fenêtre d'affichage
-     * 
-     */
-    void clear();
-
-    /**
      * @brief Définit le plateau à afficher
      * 
      * @param plateau 
