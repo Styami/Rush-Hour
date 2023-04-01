@@ -39,7 +39,7 @@ public:
      * @param w largeur de la fenetre
      * @param h hauteur de la fenetre
      */
-    consoleWindow(unsigned int w, unsigned int h, int _framerate = 60, int console_mode = 0, std::string title="");
+    consoleWindow(unsigned int w, unsigned int h, std::string title="", int console_mode = 0, int _framerate = 60);
 
     /**
      * @brief Détruit la fenetre et libère la mémoire

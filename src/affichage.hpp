@@ -1,7 +1,8 @@
 #ifndef __AFFICHAGE__
 #define __AFFICHAGE__
 
-#include "plateau.hpp"
+#include "RPL/RPLconsole.h"
+#include "bloc.hpp"
 
 class Window {
 public:
@@ -18,17 +19,15 @@ public:
      * 
      * @param plateau 
      */
-    void set_active_plateau(const Plateau& plateau);
+    void dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count);
 
-    /**
-     * @brief Affiche le plateau
-     * 
-     */
-    void draw();
-
+    static void test();
 
 private:
-    const Plateau& plateau;
+    RPL::consoleWindow m_window;
+
+    const Bloc* m_blocks_array;
+    std::size_t m_blocks_count;
 };
 
 #endif

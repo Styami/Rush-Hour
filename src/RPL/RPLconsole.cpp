@@ -5,12 +5,12 @@ using namespace std;
 using namespace RPL;
 
 
-consoleWindow::consoleWindow(unsigned int w, unsigned int h, int _framerate, int console_mode, string _title) :
+consoleWindow::consoleWindow(unsigned int w, unsigned int h, string _title, int console_mode, int _framerate) :
     dimx(w), dimy(h), window(new Cell[w * h]), current_color(), current_color_mode(38), framerate(_framerate)
 {
     termInit();
 
-    draw_logo();
+    //draw_logo();
 
     for(int i = 0; i < dimx*dimy; i++) {
         window[i].c = ' ';

@@ -1,5 +1,6 @@
 #include "bloc.hpp"
 #include "plateau.hpp"
+#include "affichage.hpp"
 
 int main(void) {
     int err = 0;
@@ -18,6 +19,12 @@ int main(void) {
         std::cout << "Tous les tests ont réussi";
     else
         std::cout << err << " tests ont échoué"; 
+
+
+    std::cout << "Appuyer sur une touche pour lancer l'affichage d'un plateau\n";
+    //getchar();
+
+    Window::test();
 
     std::cout << std::endl;
     
