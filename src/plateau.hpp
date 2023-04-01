@@ -33,6 +33,13 @@ public:
     Plateau(Plateau&& p);
 
     /**
+     * @brief Construit un plateau à partir d'un fichier
+     * 
+     * @param file_path 
+     */
+    Plateau(const std::string& file_path);
+
+    /**
      * @brief Opérateur d'assignement par déplacement
      * 
      * @param p 
