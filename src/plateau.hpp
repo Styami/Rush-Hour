@@ -62,6 +62,20 @@ public:
      */
     bool est_gagnant() const;
 
+    /**
+     * @brief Renvoie le tableau des blocs pour pouvoir les afficher
+     * 
+     * @return const Bloc* 
+     */
+    const Bloc* get_block_array() { return m_blocks_array; };
+    
+    /**
+     * @brief Renvoie le nombre de bloc dans le plateau
+     *  Lit cette information depuis s_plateau_data
+     * @return std::size_t 
+     */
+    static std::size_t get_block_count();
+
     // 
     //     Gestion table de hashage
     // 
@@ -188,13 +202,6 @@ private:
      * @param count Nombre de bloc
      */
     static void set_block_count(uint64_t count);
-
-    /**
-     * @brief Renvoie le nombre de bloc dans le plateau
-     *  Lit cette information depuis s_plateau_data
-     * @return std::size_t 
-     */
-    static std::size_t get_block_count();
 
     /**
      * @brief Stock l'index du bloc à sortir

@@ -42,7 +42,7 @@ Plateau::Plateau(const std::string& file_path)
 
     int x, y, size, orientation, winning;
 
-    for(int i = 0; i < block_count; i++) {
+    for(std::size_t i = 0; i < block_count; i++) {
         file >> x >> y >> size >> orientation >> winning;
         m_blocks_array[i].set_data(x, y, (bool)size, orientation ? Orientation::vertical : Orientation::horizontal);
         if(winning)
@@ -431,7 +431,7 @@ bool Plateau::test() {
         Plateau p("data/niveau0.rh");
         std::ifstream file("data/niveau0.rh");
 
-        int block_count;
+        std::size_t block_count;
         file >> block_count;
         if(get_block_count() != block_count) {
             std::cout << "Lecture fichier: Block Count erronné: " << get_block_count() << " au lieu de " << block_count << "\n";
@@ -440,7 +440,7 @@ bool Plateau::test() {
 
         int x, y, size, orientation, winning;
         
-        for(int i = 0; i < block_count; i++) {
+        for(std::size_t i = 0; i < block_count; i++) {
             file >> x >> y >> size >> orientation >> winning;
             size = (size ? 3 : 2);
 

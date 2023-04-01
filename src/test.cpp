@@ -16,9 +16,9 @@ int main(void) {
     }
 
     if(err == 0)
-        std::cout << "Tous les tests ont réussi";
+        std::cout << "Tous les tests ont réussi\n";
     else
-        std::cout << err << " tests ont échoué"; 
+        std::cout << err << " tests ont échoué\n"; 
 
 
     std::cout << "Appuyer sur une touche pour lancer l'affichage d'un plateau\n";
