@@ -1,5 +1,8 @@
 #include "plateau.hpp"
 #include "bloc.hpp"
+#include "utils.hpp"
+
+#include <fstream>
 
 uint64_t Plateau::s_plateau_data = 0;
 Plateau* Plateau::s_loaded_plateau = nullptr;
@@ -24,6 +27,29 @@ Plateau::Plateau(Plateau&& p) :
     m_blocks_array(std::move(p.m_blocks_array))
 {
     p.m_blocks_array = nullptr;
+}
+
+Plateau::Plateau(const std::string& file_path)
+{
+    std::ifstream file(file_path);
+    assert(file.is_open());
+    unsigned int block_count;
+    
+    file >> block_count;
+    
+    set_block_count(block_count);
+    m_blocks_array = new Bloc[block_count];
+
+    int x, y, size, orientation, winning;
+
+    for(int i = 0; i < block_count; i++) {
+        file >> x >> y >> size >> orientation >> winning;
+        m_blocks_array[i].set_data(x, y, (bool)size, orientation ? Orientation::vertical : Orientation::horizontal);
+        if(winning)
+            set_winning_block(i);
+    }
+    
+    file.close();
 }
 
 Plateau& Plateau::operator=(Plateau&& p) {
@@ -67,7 +93,7 @@ bool Plateau::test_collision(int index) {
 
 void Plateau::set_block_count(uint64_t count) {
     assert(count > 0 && count <= 16);
-
+    s_plateau_data &= s_plateau_data & 0xffffff0fffffffff; 
     s_plateau_data |= ((count - 1) << 36);
 }
 
@@ -78,7 +104,7 @@ std::size_t Plateau::get_block_count() {
 
 void Plateau::set_winning_block(uint64_t index) {
     assert(index >= 0 && index < 16);
-
+    s_plateau_data &= 0xfffff0ffffffffff;
     s_plateau_data |= (index << 40);
 }
 
@@ -259,6 +285,10 @@ bool Plateau::test() {
     bool last_failed = false;
 
     Plateau p(2);
+    if(get_block_count() != 2) {
+        std::cout << "Block count erronné " << get_block_count() << " au lieu de 2.";
+        //return false;
+    }
     bool blocs_map[36]{0};
     bool collision_array[36];
 
@@ -397,6 +427,54 @@ bool Plateau::test() {
         }
     }
 
+    {
+        Plateau p("data/niveau0.rh");
+        std::ifstream file("data/niveau0.rh");
+
+        int block_count;
+        file >> block_count;
+        if(get_block_count() != block_count) {
+            std::cout << "Lecture fichier: Block Count erronné: " << get_block_count() << " au lieu de " << block_count << "\n";
+            nb_erreur++;
+        }
+
+        int x, y, size, orientation, winning;
+        
+        for(int i = 0; i < block_count; i++) {
+            file >> x >> y >> size >> orientation >> winning;
+            size = (size ? 3 : 2);
+
+            if(p.m_blocks_array[i].get_coord().x != x) {
+                std::cout << "Lecture fichier bloc " << i << ": Coordonnée x erronnées: " << p.m_blocks_array[i].get_coord().x << " au lieu de " << x << "\n";
+                nb_erreur++;
+            }
+            if(p.m_blocks_array[i].get_coord().y != y) {
+                std::cout << "Lecture fichier bloc " << i << ": Coordonnée y erronnées: " << p.m_blocks_array[i].get_coord().y << " au lieu de " << y << "\n";
+                nb_erreur++;
+            }
+            if(p.m_blocks_array[i].get_size() != size) {
+                std::cout << "Lecture fichier bloc " << i << ": Taille erronnée: " << (int) p.m_blocks_array[i].get_size() << " au lieu de " << size << "\n";
+                nb_erreur++;
+            }
+            if(p.m_blocks_array[i].get_orientation() != (orientation ? Orientation::vertical : Orientation::horizontal)) {
+                std::cout << "Lecture fichier bloc " << i << ": Orientation erronnée: " 
+                << (p.m_blocks_array[i].get_orientation() == Orientation::vertical ? "vertical" : "horizontal") 
+                << " au lieu de " 
+                << (orientation == 1 ? "vertical" : "horizontal") 
+                << "\n";
+                nb_erreur++;
+            }
+            if(winning && i != get_winning_block()) {
+                std::cout << "Lecture fichier bloc " << i << ": Winning block erronné: " << get_winning_block() << " au lieu de " << i << "\n";
+                nb_erreur++;
+            }
+            if(!winning && i == get_winning_block()) {
+                std::cout << "Lecture fichier bloc " << i << ": Winning block erronné: " << i << " marqué comme victorieux.\n";
+            }
+        }
+
+        file.close();
+    }
     if(nb_erreur != 0)
         return false;
     return true;
