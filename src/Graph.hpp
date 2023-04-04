@@ -10,15 +10,17 @@
 
 class Graph{
     private:
-        Sommets* m_noeud;
+        Sommets* m_racine;
         std::unordered_map<const Plateau&,Sommets*, Plateau::Thash, Plateau::Tequal> m_hash_map;
         std::queue<Sommets*> m_file_noeud;
 
         void generer(Sommets* node);
+        void restart_parcours();
     public:
         Graph(Sommets* node);
 
-        const Sommets* parcours();
+        Sommets* parcours(bool chercher_solution);
+        const Sommets* farthest_node(Sommets* init_node);
         static void test();
 
         ~Graph();

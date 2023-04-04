@@ -19,6 +19,7 @@ class Sommets{
         std::vector<Lien> m_chemin_voisins;
     public:
         bool m_traite;
+        int distance;
         Sommets(std::unique_ptr<Plateau> element);
 
         
@@ -27,6 +28,7 @@ class Sommets{
 
 
         const Plateau& get_element() const;
+        std::vector<Sommets*> get_node_neighbours();
         static void test();
 
         ~Sommets();
