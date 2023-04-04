@@ -67,7 +67,7 @@ public:
      * 
      * @return const Bloc* 
      */
-    const Bloc* get_block_array() { return m_blocks_array; };
+    const Bloc* get_block_array() const { return m_blocks_array; };
     
     /**
      * @brief Renvoie le nombre de bloc dans le plateau
@@ -97,7 +97,7 @@ public:
     std::size_t hash() const;
 
     struct Thash {
-        std::size_t operator() (const Plateau& p) const { return p.hash();}
+        std::size_t operator() (Plateau* p) const { return p->hash();}
     };
 
     struct Tequal {
