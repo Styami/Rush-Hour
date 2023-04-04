@@ -20,7 +20,6 @@ class Graph{
         Graph(Sommets* node);
 
         Sommets* parcours(bool chercher_solution);
-        const Sommets* farthest_node(Sommets* init_node);
         static void test();
 
         ~Graph();

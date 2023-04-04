@@ -2,8 +2,23 @@
 
 Sommets::Sommets(std::unique_ptr<Plateau> element) :
     m_element(std::move(element)),
-    m_traite(false)
+    m_traite(false),
+    distance(0)
 {}
+
+Sommets& Sommets::operator=(Sommets&& s)
+{
+    if(this != &s) {
+        m_element = std::move(s.m_element);
+        s.m_element = nullptr;
+        m_chemin_voisins = std::move(s.m_chemin_voisins);
+        m_traite = s.m_traite;
+        s.m_traite = true;
+        distance = s.distance;
+        s.distance = 0;
+    }
+    return *this;
+}
 
 void Sommets::link(Sommets* som, int poids){
     m_chemin_voisins.push_back({som, poids});
@@ -27,8 +42,8 @@ std::vector<std::unique_ptr<Plateau>> Sommets::generer(){
 }
 
 Sommets::~Sommets(){
-    m_element=0;
-    m_traite=false;
+    m_traite = false;
+    distance = 0;
     m_chemin_voisins.clear();
 }
 

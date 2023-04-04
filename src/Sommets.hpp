@@ -22,6 +22,8 @@ class Sommets{
         int distance;
         Sommets(std::unique_ptr<Plateau> element);
 
+        Sommets& operator=(Sommets&& s);
+
         
         void link(Sommets* som, int poids);
         std::vector<std::unique_ptr<Plateau>> generer();

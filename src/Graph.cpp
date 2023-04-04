@@ -35,64 +35,31 @@ void Graph::restart_parcours(){
 }
 Sommets* Graph::parcours(bool chercher_solution){
     m_file_noeud.push(m_racine);
-    Sommets* res=nullptr;
+    Sommets* current_noeud = nullptr;
     while(!m_file_noeud.empty()){
-        Sommets* current_noeud=m_file_noeud.front();
+        current_noeud=m_file_noeud.front();
         m_file_noeud.pop();
         
         if(!current_noeud->m_traite){
-            if(chercher_solution && current_noeud->get_element()->est_gagnant()){
-                std::cout << "Tu as gagné!" << std::endl;
-                res=current_noeud;
+            if(chercher_solution && current_noeud->get_element()->est_gagnant())
                 break;
-            }
-            if(!chercher_solution){
-                if(res->distance<current_noeud->distance)
-                    res=current_noeud;
-            }
         
             generer(current_noeud);
             current_noeud->m_traite=true;
         }
     }
-
-    std::cout << "le noeud final:" << std::endl;
-    return res;
+    return current_noeud;
 }
 
 
-const Sommets* Graph::farthest_node(Sommets* init_node){
-    restart_parcours();
-    m_file_noeud.push(init_node);
-    int farthest_distance=0;
-    int current_distance=0;
-    Sommets* res=nullptr;
-    while(!m_file_noeud.empty()){
-        Sommets* current_noeud=m_file_noeud.front();
+Graph::~Graph() {
+    while(!m_file_noeud.empty())
         m_file_noeud.pop();
-        if(!current_noeud->m_traite){
-            for(Sommets* noeud: current_noeud->get_node_neighbours()){
-                m_file_noeud.push(noeud);
-            }
-            current_noeud->distance=current_distance+1;
-            if(current_noeud->distance>farthest_distance){
-                farthest_distance=current_noeud->distance;
-                res=current_noeud;
-            }
-            current_noeud->m_traite=true;
-        }
-    }
-    return res;
-}
 
-Graph::~Graph(){
-    Sommets* tmp=m_file_noeud.front();
-    while(tmp!=nullptr){
-        m_file_noeud.pop();
-        tmp=m_file_noeud.front();
+    for(auto &it:m_hash_map) {
+        if(it.second != nullptr)
+            delete it.second;
     }
-    for(auto &it:m_hash_map)
-        delete it.second;
     m_hash_map.clear();
     m_racine=nullptr;
 }

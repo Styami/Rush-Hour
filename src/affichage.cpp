@@ -36,6 +36,9 @@ void Window::dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count
     m_window.draw_window();
 }
 
+#include <memory>
+#include <vector>
+
 void Window::test() {
     Window w;
 
@@ -47,4 +50,11 @@ void Window::test() {
     // plateau[4].set_data(2, 2, false, Orientation::horizontal);
     Plateau p("data/niveau0.rh");
     w.dessiner_plateau(p.get_block_array(), p.get_block_count());
+
+    std::vector<std::unique_ptr<Plateau>> pp = p.get_neighbours();
+
+    for(int i = 0; i < pp.size(); i++) {
+       getchar();
+       w.dessiner_plateau(pp[i]->get_block_array(), pp[i]->get_block_count());
+    }
 }
