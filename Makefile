@@ -5,7 +5,7 @@ bin/exec_debug: obj/main.o
 	g++ -g -Wall -o bin/exec_debug obj/main.o
 
 # Executable
-bin/exec: obj/main.o obj/plateau.o obj/Graph.o obj/bloc.o obj/utils.o obj/Sommets.o
+bin/exec: obj/main.o obj/plateau.o obj/Graph.o obj/bloc.o obj/utils.o obj/Sommets.o obj/affichage.o obj/RPLconsole.o obj/RPLcolor.o
 	g++ -Wall -std=c++20 -o $@ $^ 
 
 bin/test: obj/test.o obj/bloc.o obj/plateau.o obj/utils.o obj/affichage.o obj/RPLconsole.o obj/RPLcolor.o
