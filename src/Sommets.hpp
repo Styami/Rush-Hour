@@ -27,7 +27,7 @@ class Sommets{
         std::vector<std::unique_ptr<Plateau>> generer();
 
 
-        const Plateau& get_element() const;
+        Plateau* get_element() const;
         std::vector<Sommets*> get_node_neighbours();
         static void test();
 

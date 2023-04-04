@@ -11,7 +11,7 @@
 class Graph{
     private:
         Sommets* m_racine;
-        std::unordered_map<const Plateau&,Sommets*, Plateau::Thash, Plateau::Tequal> m_hash_map;
+        std::unordered_map<Plateau*,Sommets*, Plateau::Thash, Plateau::Tequal> m_hash_map;
         std::queue<Sommets*> m_file_noeud;
 
         void generer(Sommets* node);
