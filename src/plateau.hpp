@@ -18,6 +18,8 @@
  */
 class Plateau {
 public:
+    Plateau();
+
     /**
      * @brief Construit un plateau à partir des blocs passé en paramètre.
      * 
