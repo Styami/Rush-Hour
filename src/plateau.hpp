@@ -103,7 +103,7 @@ public:
     };
 
     struct Tequal {
-        bool operator() (const Plateau& a, const Plateau& b) const { return a == b; }
+        bool operator() (Plateau* a, Plateau* b) const { return *a == *b; }
     };
 
 
