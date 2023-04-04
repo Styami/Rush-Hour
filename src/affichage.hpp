@@ -6,7 +6,7 @@
 
 class Window {
 public:
-    Window();
+    Window(std::size_t bloc_count);
 
     /**
      * @brief Définit le plateau à afficher
@@ -18,10 +18,13 @@ public:
     static void test();
 
 private:
+    struct Color {
+        unsigned char r, g, b;
+    };
     RPL::consoleWindow m_window;
 
-    const Bloc* m_blocks_array;
     std::size_t m_blocks_count;
+    Color* m_block_color;
 };
 
 #endif
