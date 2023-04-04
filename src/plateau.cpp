@@ -7,6 +7,10 @@
 uint64_t Plateau::s_plateau_data = 0;
 Plateau* Plateau::s_loaded_plateau = nullptr;
 
+Plateau::Plateau() :
+    m_blocks_array(nullptr)
+{}
+
 Plateau::Plateau(std::size_t nb_blocks) :
     m_blocks_array(new Bloc[nb_blocks])
 {
