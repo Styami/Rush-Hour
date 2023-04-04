@@ -13,9 +13,9 @@ Window::Window(std::size_t bloc_count) :
     m_window.set_color_mode(RPL::CONSOLE_COLOR_BACKGROUND);
 
     for(int i = 0; i < m_blocks_count; i++) {
-        m_block_color[i].r = random() % 256;
-        m_block_color[i].g = random() % 256;
-        m_block_color[i].b = random() % 256;
+        m_block_color[i].r = 100 + random() % 156;
+        m_block_color[i].g = 100 + random() % 156;
+        m_block_color[i].b = 100 + random() % 156;
     }
 }
 

@@ -3,9 +3,11 @@
 #include "affichage.hpp"
 
 int main(){
-    Window window;
-
+    srand(time(NULL));
+    
     std::unique_ptr<Plateau> first_plat= std::make_unique<Plateau>("data/niveau0.rh");
+    Window window(first_plat->get_block_count());
+
     Sommets* node= new Sommets(std::move(first_plat));
     Plateau* p;
     window.dessiner_plateau(node->get_element()->get_block_array(), node->get_element()->get_block_count());
