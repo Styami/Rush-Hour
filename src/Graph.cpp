@@ -1,47 +1,62 @@
 #include "Graph.hpp"
 
-Graph::Graph(Sommets* node) :
+// m_racine n'est qu'une référence faible vers le sommet stocké dans la hashmap
+Graph::Graph(std::shared_ptr<Sommets> node) :
     m_racine(node)
-{m_hash_map.insert(std::pair<Plateau*, Sommets*>(node->get_element(),node));}
+{m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(node->get_plateau().get(), node));}
 
-void Graph::generer(Sommets* node){
-    std::vector<std::unique_ptr<Plateau>> plateaux_voisins =node->generer();
+void Graph::generer(std::shared_ptr<Sommets> node){
+    std::vector<std::unique_ptr<Plateau>> plateaux_voisins = node->generer_voisins();
 
     for(std::unique_ptr<Plateau>& plateau: plateaux_voisins){
-        auto potentiel_sommet=m_hash_map.find(plateau.get());
+        auto potentiel_sommet = m_hash_map.find(plateau.get());
 
-        if(potentiel_sommet==m_hash_map.end()){ // le voisin est un noeud qui n'existait pas
-            Sommets* tmp_ptr=new Sommets(std::move(plateau));
-            m_hash_map.insert(std::pair<Plateau*,Sommets*>(tmp_ptr->get_element(), tmp_ptr));
-            node->link(tmp_ptr,1);
-            tmp_ptr->distance = 1 + node->distance;
-            m_file_noeud.push(tmp_ptr);
+        // le voisin est un noeud qui n'existait pas
+        if(potentiel_sommet == m_hash_map.end())
+        { 
+            // On crée le sommet à partir du plateau
+            std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau));
+
+            // On fait les liens avec le sommets actuel
+            node->link(*nouveau_sommet,1);
+            nouveau_sommet->m_distance = 1 + node->m_distance;
+            m_file_noeud.push(nouveau_sommet);
+
+            // On l'ajoute dans la hashmap
+            m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(nouveau_sommet->get_plateau().get(), std::move(nouveau_sommet)));
         }
-
-        else{ // le voisin est un noeud déjà existant
-            node->link(potentiel_sommet->second,1);
+        // le voisin est un noeud déjà existant
+        else{ 
+            // On fait les liens avec le sommets actuel
+            node->link(*potentiel_sommet->second,1);
+            // Le plateau sera delete puisque c'est un unique ptr
         }
     }
 }
 
-void Graph::restart_parcours(){
-    Sommets* tmp=m_file_noeud.front();
-    while(tmp!=nullptr){
+void Graph::restart_parcours()
+{
+    std::shared_ptr<Sommets> tmp = m_file_noeud.front().lock();
+    while(!m_file_noeud.empty())
+    {
         m_file_noeud.pop();
-        tmp=m_file_noeud.front();
     }
+    
     for(auto &it:m_hash_map)
-        delete it.second;
+        it.second.reset();
 }
-Sommets* Graph::parcours(bool chercher_solution){
+
+std::weak_ptr<Sommets> Graph::parcours(bool chercher_solution){
     m_file_noeud.push(m_racine);
-    Sommets* current_noeud = nullptr;
-    while(!m_file_noeud.empty()){
-        current_noeud=m_file_noeud.front();
+    std::shared_ptr<Sommets> current_noeud = nullptr;
+    
+    while(!m_file_noeud.empty())
+    {
+        current_noeud = m_file_noeud.front().lock();
         m_file_noeud.pop();
         
         if(!current_noeud->m_traite){
-            if(chercher_solution && current_noeud->get_element()->est_gagnant())
+            if(chercher_solution && current_noeud->get_plateau()->est_gagnant())
                 break;
         
             generer(current_noeud);
@@ -56,19 +71,21 @@ Graph::~Graph() {
     while(!m_file_noeud.empty())
         m_file_noeud.pop();
 
+    // On rappel que m_racine est détenu par l'unordered map, et non pas par le graph
+    // elle sera donc bien libérée par cette boucle
     for(auto &it:m_hash_map) {
-        if(it.second != nullptr)
-            delete it.second;
+        //if(it.second != nullptr) // inutile à priori
+        it.second.reset();
     }
+
     m_hash_map.clear();
-    m_racine=nullptr;
 }
 
 void Graph::test(){
     //test constructeur
     // Graph graph_test(new Sommets<int>(3));
-    // assert(graph_test.m_noeud->get_element()==3);
-    // assert(graph_test.m_hash_map[3]->get_element()==3);
+    // assert(graph_test.m_noeud->get_plateau()==3);
+    // assert(graph_test.m_hash_map[3]->get_plateau()==3);
     // graph_test.generer(graph_test.m_noeud,5);
     // assert(graph_test.m_noeud->m_voisins.size()==5);
     // assert(graph_test.m_file_noeud.size()==5);

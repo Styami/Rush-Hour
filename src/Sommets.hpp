@@ -12,28 +12,28 @@
 class Sommets{
     private:
         struct Lien{
-            Sommets* voisin;
+            const Sommets& voisin;
             int poids;
         };
-        std::unique_ptr<Plateau> m_element;
+        std::shared_ptr<Plateau> m_plateau;
         std::vector<Lien> m_chemin_voisins;
+
     public:
         bool m_traite;
-        int distance;
-        Sommets(std::unique_ptr<Plateau> element);
+        int m_distance;
 
-        Sommets& operator=(Sommets&& s);
+        Sommets(std::unique_ptr<Plateau> plateau);
+        ~Sommets();
 
         
-        void link(Sommets* som, int poids);
-        std::vector<std::unique_ptr<Plateau>> generer();
+        void link(Sommets& som, int poids);
+        std::vector<std::unique_ptr<Plateau>> generer_voisins();
 
 
-        Plateau* get_element() const;
-        std::vector<Sommets*> get_node_neighbours();
+        std::shared_ptr<Plateau> get_plateau() const;
+        std::vector<std::weak_ptr<Sommets>> get_voisins() const;
         static void test();
 
-        ~Sommets();
         
 };
 #endif

@@ -5,6 +5,9 @@
 #include "utils.hpp"
 #include "plateau.hpp"
 
+#include <memory>
+#include <vector>
+
 Window::Window(std::size_t bloc_count) :
     m_window(6, 6, "Rush Hour", 60, RPL::CONSOLE_BORDERED | RPL::CONSOLE_SPACED),
     m_blocks_count(bloc_count),
@@ -17,6 +20,11 @@ Window::Window(std::size_t bloc_count) :
         m_block_color[i].g = 100 + random() % 156;
         m_block_color[i].b = 100 + random() % 156;
     }
+}
+
+Window::~Window() 
+{
+    delete [] m_block_color;
 }
 
 void Window::dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count) {
@@ -43,8 +51,6 @@ void Window::dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count
     m_window.draw_window();
 }
 
-#include <memory>
-#include <vector>
 
 void Window::test() {
     Window w(5);

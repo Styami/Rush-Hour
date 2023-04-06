@@ -7,6 +7,7 @@
 class Window {
 public:
     Window(std::size_t bloc_count);
+    ~Window();
 
     /**
      * @brief Définit le plateau à afficher
