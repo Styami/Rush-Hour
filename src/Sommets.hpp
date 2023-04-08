@@ -19,7 +19,7 @@ class Sommets{
         std::vector<Lien> m_chemin_voisins;
     public:
         bool m_traite;
-        int distance;
+        mutable int distance;
         Sommets(std::unique_ptr<Plateau> element);
 
         Sommets& operator=(Sommets&& s);
@@ -30,7 +30,7 @@ class Sommets{
 
 
         Plateau* get_element() const;
-        std::vector<Sommets*> get_node_neighbours();
+        std::vector<const Sommets*> get_node_neighbours() const;
         static void test();
 
         ~Sommets();

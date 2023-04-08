@@ -19,7 +19,8 @@ class Graph{
     public:
         Graph(Sommets* node);
 
-        Sommets* parcours(bool chercher_solution);
+        std::vector<Sommets*> parcours(bool chercher_solution);
+        Sommets* generer_lvl(std::vector<Sommets*> solutions);
         static void test();
 
         ~Graph();

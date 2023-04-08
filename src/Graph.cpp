@@ -33,7 +33,8 @@ void Graph::restart_parcours(){
     for(auto &it:m_hash_map)
         delete it.second;
 }
-Sommets* Graph::parcours(bool chercher_solution){
+std::vector<Sommets*> Graph::parcours(bool chercher_solution){
+    std::vector<Sommets*> res;
     m_file_noeud.push(m_racine);
     Sommets* current_noeud = nullptr;
     while(!m_file_noeud.empty()){
@@ -41,14 +42,44 @@ Sommets* Graph::parcours(bool chercher_solution){
         m_file_noeud.pop();
         
         if(!current_noeud->m_traite){
-            if(chercher_solution && current_noeud->get_element()->est_gagnant())
-                break;
+            if(current_noeud->get_element()->est_gagnant()){
+                res.push_back(current_noeud);
+                if(chercher_solution)
+                    break;
+            }
         
             generer(current_noeud);
             current_noeud->m_traite=true;
         }
     }
-    return current_noeud;
+    return res;
+}
+
+
+Sommets* Graph::generer_lvl(std::vector<Sommets*> solutions){
+    for(auto& it: m_hash_map){
+        it.second->m_traite=false;
+        it.second->distance=0;
+    }
+    for(Sommets* s: solutions)
+        m_file_noeud.push(s);
+    
+    Sommets* current_node=nullptr;
+    while(!m_file_noeud.empty()){
+        current_node=m_file_noeud.front();
+        m_file_noeud.pop();
+        if(!current_node->m_traite){
+            for(const Sommets*& s : current_node->get_node_neighbours()){
+                if(!s->m_traite){
+                    m_file_noeud.push((Sommets*)s);
+                    s->distance=current_node->distance+1;
+                }
+            }
+            current_node->m_traite=true;
+        }
+    }
+    
+    return current_node;
 }
 
 

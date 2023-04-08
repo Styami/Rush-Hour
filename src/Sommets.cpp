@@ -29,8 +29,8 @@ Plateau* Sommets::get_element() const{
     return m_element.get();
 }
 
-std::vector<Sommets*> Sommets::get_node_neighbours(){
-    std::vector<Sommets*> res;
+std::vector<const Sommets*> Sommets::get_node_neighbours() const{
+    std::vector<const Sommets*> res;
     for(Lien node: m_chemin_voisins){
         res.push_back(node.voisin);
     }
