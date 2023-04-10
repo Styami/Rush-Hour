@@ -29,6 +29,7 @@ consoleWindow::consoleWindow(unsigned int w, unsigned int h, const string& _titl
         bordered = true;
     }
 
+    draw_window();
 }
 
 consoleWindow::~consoleWindow() {
@@ -119,21 +120,6 @@ void consoleWindow::print_char(int x, int y, const char* c) {
 void consoleWindow::print_char(int x, int y, const std::string& string) {
     print_char(x, y, string.c_str());
 }
-
-void consoleWindow::draw_logo() {
-    for(int j = 0; j<dimy; j++) {
-        for(int i=0; i<dimx + (bordered ? 2 : 0); i++) {
-            print_char(i, j, '*');
-        }
-    }
-    for(int j= 0; j < dimy; j++) {
-        for(int i = 0; i < dimx; i++) {
-            printf("\e[%u;2;%u;%u;%um%c\e[0m", window[i + j * dimx].col_mode, window[i + j * dimx].col.r, window[i + j * dimx].col.g, window[i + j * dimx].col.b, window[i + j * dimx].c);
-        }
-        printf("\n");
-    }
-}
-
 
 int consoleWindow::kbhit() {
     struct timeval tv;
