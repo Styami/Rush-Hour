@@ -78,6 +78,9 @@ public:
      */
     static std::size_t get_block_count();
 
+    void charger(std::string file_path);
+    void sauvegarder(std::string file_path);
+
     // 
     //     Gestion table de hashage
     // 
@@ -224,7 +227,8 @@ private:
     //      Test unitaires
     // 
 
-    static void test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur);
+    static void test_lecture_ecriture(int& nb_erreur);
+    static bool test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur);
     static void get_collision_array(bool* array);
 };
 

@@ -61,7 +61,7 @@ void Window::test() {
     // plateau[2].set_data(0, 5, true, Orientation::horizontal);
     // plateau[3].set_data(5, 4, false, Orientation::vertical);
     // plateau[4].set_data(2, 2, false, Orientation::horizontal);
-    Plateau p("data/niveau0.rh");
+    Plateau p("data/test_data_save.rh");
     w.dessiner_plateau(p.get_block_array(), p.get_block_count());
 
     std::vector<std::unique_ptr<Plateau>> pp = p.get_neighbours();

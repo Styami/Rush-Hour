@@ -33,27 +33,10 @@ Plateau::Plateau(Plateau&& p) :
     p.m_blocks_array = nullptr;
 }
 
-Plateau::Plateau(const std::string& file_path)
+Plateau::Plateau(const std::string& file_path) :
+    m_blocks_array(nullptr)
 {
-    std::ifstream file(file_path);
-    assert(file.is_open());
-    unsigned int block_count;
-    
-    file >> block_count;
-    
-    set_block_count(block_count);
-    m_blocks_array = new Bloc[block_count];
-
-    int x, y, size, orientation, winning;
-
-    for(std::size_t i = 0; i < block_count; i++) {
-        file >> x >> y >> size >> orientation >> winning;
-        m_blocks_array[i].set_data(x, y, (bool)size, orientation ? Orientation::vertical : Orientation::horizontal);
-        if(winning)
-            set_winning_block(i);
-    }
-    
-    file.close();
+    charger(file_path);
 }
 
 Plateau& Plateau::operator=(Plateau&& p) {
@@ -203,6 +186,68 @@ std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) 
     return make_unique<Plateau>(res);
 }
 
+bool Plateau::operator==(const Plateau& p) const {
+    for(std::size_t i = 0; i < get_block_count(); i++) {
+        if(m_blocks_array[i].get_raw() != p.m_blocks_array[i].get_raw())
+            return false;
+    }
+    return true;
+}
+
+std::size_t Plateau::hash() const {
+    // Idée récupérée de Stackoverflow: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
+    //      Solution de Karl von Moor
+    // N'ayant aucune connaissance technique en hashage, nous avons décidé de trouver une solution existante pour 
+    // éviter des cas d'erreur difficilement débuggable
+
+    std::hash<char> hasher;
+    std::size_t new_hash = 0;
+    for(std::size_t i = 0; i < get_block_count(); i++) {
+        new_hash ^= hasher(m_blocks_array[i].get_raw()) + 0xf2ae2ba4 + (new_hash << 6) + (new_hash >> 2);
+    }
+    return new_hash;
+}
+
+void Plateau::sauvegarder(std::string file_path) 
+{
+    std::ofstream file(file_path);
+
+    file << (unsigned char)get_block_count();
+    file << (unsigned char)get_winning_block();
+
+    for(std::size_t i = 0 ; i < get_block_count(); i++) {
+        file << m_blocks_array[i].get_raw();
+    }
+
+    file.close();
+}
+
+void Plateau::charger(std::string file_path) 
+{
+    std::ifstream file(file_path);
+    assert(file.is_open());
+    unsigned char read;
+
+    // Nombre de block
+    read = file.get();
+    set_block_count(read);
+
+    // Allocation mémoire du tableau
+    if(m_blocks_array != nullptr)
+        delete [] m_blocks_array;
+    m_blocks_array = new Bloc[get_block_count()];
+
+    // Bloc gagnant
+    read = file.get();
+    set_winning_block(read);
+
+    // Création des blocs
+    for(std::size_t i = 0; i < get_block_count(); i++) {
+        read = file.get();
+        m_blocks_array[i].set_data(read);
+    }
+    file.close();
+}
 
 //
 //
@@ -234,19 +279,7 @@ void Plateau::get_collision_array(bool* array) {
     } 
 }
 
-static void print_debug_tab(bool* blocs_map, bool* collision_array) {
-    for(int j = 0; j < 6; j++) {
-        std::cout << " ";
-        for(int i = 0; i < 6; i++)
-            std::cout << blocs_map[i + j * 6] << " ";
-        std::cout << "        ";
-        for(int i = 0; i < 6; i++)
-            std::cout << collision_array[i + j * 6] << " ";
-        std::cout << "\n";
-    }
-}
-
-void Plateau::test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur) {
+bool Plateau::test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur) {
     if(p.can_block_move(index, displacement) != expected_result) {
         nb_erreur++;
         std::cout << "Le bloc d'index " << index << 
@@ -259,34 +292,96 @@ void Plateau::test_can_block_move(const Plateau& p, int index, int displacement,
         else
             std::cout << (displacement < 0 ? "le haut" : "le bas");
         std::cout << "\n";
+        return true;
+    }
+    return false;
+}
+
+static void print_debug_tab(bool* blocs_map, bool* collision_array) {
+    for(int j = 0; j < 6; j++) {
+        std::cout << " ";
+        for(int i = 0; i < 6; i++)
+            std::cout << blocs_map[i + j * 6] << " ";
+        std::cout << "        ";
+        for(int i = 0; i < 6; i++)
+            std::cout << collision_array[i + j * 6] << " ";
+        std::cout << "\n";
     }
 }
 
-bool Plateau::operator==(const Plateau& p) const {
-    for(std::size_t i = 0; i < get_block_count(); i++) {
-        if(m_blocks_array[i].get_raw() != p.m_blocks_array[i].get_raw())
-            return false;
-    }
-    return true;
-}
+void Plateau::test_lecture_ecriture(int& nb_erreur) {
+// Test chargement
+    std::ifstream file("data/test_data_human_readable.rh");
+    unsigned int block_count, winning, x, y, size, orientation;
 
-std::size_t Plateau::hash() const {
-    // Idée récupérée de Stackoverflow: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
-    //      Solution de Karl von Moor
-    // N'ayant aucune connaissance technique en hashage, nous avons décidé de trouver une solution existante pour 
-    // éviter des cas d'erreur difficilement débuggable
+    file >> block_count;
+    Plateau p_init((unsigned int)block_count);
 
-    std::hash<char> hasher;
-    std::size_t new_hash = 0;
-    for(std::size_t i = 0; i < get_block_count(); i++) {
-        new_hash ^= hasher(m_blocks_array[i].get_raw()) + 0xf2ae2ba4 + (new_hash << 6) + (new_hash >> 2);
+    file >> winning;
+    p_init.set_winning_block(winning);
+    for(std::size_t i = 0; i < (std::size_t)block_count; i++)
+    {
+        file >> x >> y >> size >> orientation;
+        (p_init.m_blocks_array[i]).set_data(
+            x, y,
+            size,
+            (orientation ? Orientation::vertical : Orientation::horizontal)
+        );
     }
-    return new_hash;
+
+    p_init.sauvegarder("data/test_data_save.rh");
+
+    file.clear();
+    file.seekg(0);
+    
+    Plateau p_load("data/test_data_save.rh");
+
+    file >> block_count;
+    if(get_block_count() != block_count) {
+        std::cout << "Lecture fichier: Block Count erronné: " << get_block_count() << " au lieu de " << block_count << "\n";
+        nb_erreur++;
+    }
+
+    file >> winning;
+    if(get_winning_block() != winning) {
+        std::cout << "Lecture fichier: Winning block erronné: " << get_winning_block() << " au lieu de " << winning << "\n";
+        nb_erreur++;
+    }
+    
+    for(std::size_t i = 0; i < block_count; i++) {
+        file >> x >> y >> size >> orientation;
+        size = (size ? 3 : 2);
+
+        if(p_load.m_blocks_array[i].get_coord().x != x) {
+            std::cout << "Lecture fichier bloc " << i << ": Coordonnée x erronnées: " << p_load.m_blocks_array[i].get_coord().x << " au lieu de " << x << "\n";
+            nb_erreur++;
+        }
+        if(p_load.m_blocks_array[i].get_coord().y != y) {
+            std::cout << "Lecture fichier bloc " << i << ": Coordonnée y erronnées: " << p_load.m_blocks_array[i].get_coord().y << " au lieu de " << y << "\n";
+            nb_erreur++;
+        }
+        if(p_load.m_blocks_array[i].get_size() != size) {
+            std::cout << "Lecture fichier bloc " << i << ": Taille erronnée: " << (int) p_load.m_blocks_array[i].get_size() << " au lieu de " << size << "\n";
+            nb_erreur++;
+        }
+        if(p_load.m_blocks_array[i].get_orientation() != (orientation ? Orientation::vertical : Orientation::horizontal)) {
+            std::cout << "Lecture fichier bloc " << i << ": Orientation erronnée: " 
+            << (p_load.m_blocks_array[i].get_orientation() == Orientation::vertical ? "vertical" : "horizontal") 
+            << " au lieu de " 
+            << (orientation == 1 ? "vertical" : "horizontal") 
+            << "\n";
+            nb_erreur++;
+        }
+    }
+
+    file.close();
 }
 
 bool Plateau::test() {
     int nb_erreur = 0;
     bool last_failed = false;
+
+    test_lecture_ecriture(nb_erreur);
 
     Plateau p(2);
     if(get_block_count() != 2) {
@@ -322,15 +417,16 @@ bool Plateau::test() {
         }
 
         // Test de can_block_move
-        test_can_block_move(p, 0, -1, true, nb_erreur);
-        test_can_block_move(p, 0, 1, true, nb_erreur);
-        test_can_block_move(p, 0, 2, false, nb_erreur);
-        test_can_block_move(p, 1, 1, true, nb_erreur);
-        test_can_block_move(p, 1, -1, true, nb_erreur);
-        test_can_block_move(p, 1, -2, true, nb_erreur);
+        last_failed = test_can_block_move(p, 0, -1, true, nb_erreur);
+        last_failed = test_can_block_move(p, 0, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 0, 2, false, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 1, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 1, -1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 1, -2, true, nb_erreur) || last_failed;
 
         // Affichage en cas d'erreur
-        if(nb_erreur != 0) {
+        if(last_failed) {
+            last_failed = false;
             std::cout << "Données réelles:      Collision arr:\n";
             print_debug_tab(blocs_map, collision_array);
         }
@@ -369,15 +465,16 @@ bool Plateau::test() {
         }
 
         // Test de can_block_move
-        test_can_block_move(*p2, 0, -1, true, nb_erreur);
-        test_can_block_move(*p2, 0, -2, true, nb_erreur);
-        test_can_block_move(*p2, 0, 1, false, nb_erreur);
-        test_can_block_move(*p2, 1, 1, true, nb_erreur);
-        test_can_block_move(*p2, 1, -1, true, nb_erreur);
-        test_can_block_move(*p2, 1, -2, true, nb_erreur);
+        last_failed = test_can_block_move(*p2, 0, -1, true, nb_erreur);
+        last_failed = test_can_block_move(*p2, 0, -2, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 0, 1, false, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 1, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 1, -1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 1, -2, true, nb_erreur) || last_failed;
         
         // Affichage en cas d'erreur
-        if(nb_erreur != 0) {
+        if(last_failed) {
+            last_failed = false;
             std::cout << "Données réelles:      Collision arr:\n";
             print_debug_tab(blocs_map, collision_array);
         }
@@ -417,70 +514,22 @@ bool Plateau::test() {
         }
 
         // Test de can_block_move
-        test_can_block_move(*p3, 0, -1, true, nb_erreur);
-        test_can_block_move(*p3, 0, -2, true, nb_erreur);
-        test_can_block_move(*p3, 0, 1, false, nb_erreur);
-        test_can_block_move(*p3, 1, 1, true, nb_erreur);
-        test_can_block_move(*p3, 1, 2, true, nb_erreur);
-        test_can_block_move(*p3, 1, -1, true, nb_erreur);
+        last_failed = test_can_block_move(*p3, 0, -1, true, nb_erreur);
+        last_failed = test_can_block_move(*p3, 0, -2, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 0, 1, false, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 1, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 1, 2, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 1, -1, true, nb_erreur) || last_failed;
 
         // Affichage en cas d'erreur
-        if(nb_erreur != 0) {
+        if(last_failed) {
+            last_failed = false;
             std::cout << "Données réelles:      Collision arr:\n";
             print_debug_tab(blocs_map, collision_array);
         }
     }
 
-    {
-        Plateau p("data/niveau0.rh");
-        std::ifstream file("data/niveau0.rh");
-
-        std::size_t block_count;
-        file >> block_count;
-        if(get_block_count() != block_count) {
-            std::cout << "Lecture fichier: Block Count erronné: " << get_block_count() << " au lieu de " << block_count << "\n";
-            nb_erreur++;
-        }
-
-        int x, y, size, orientation, winning;
-        
-        for(std::size_t i = 0; i < block_count; i++) {
-            file >> x >> y >> size >> orientation >> winning;
-            size = (size ? 3 : 2);
-
-            if(p.m_blocks_array[i].get_coord().x != x) {
-                std::cout << "Lecture fichier bloc " << i << ": Coordonnée x erronnées: " << p.m_blocks_array[i].get_coord().x << " au lieu de " << x << "\n";
-                nb_erreur++;
-            }
-            if(p.m_blocks_array[i].get_coord().y != y) {
-                std::cout << "Lecture fichier bloc " << i << ": Coordonnée y erronnées: " << p.m_blocks_array[i].get_coord().y << " au lieu de " << y << "\n";
-                nb_erreur++;
-            }
-            if(p.m_blocks_array[i].get_size() != size) {
-                std::cout << "Lecture fichier bloc " << i << ": Taille erronnée: " << (int) p.m_blocks_array[i].get_size() << " au lieu de " << size << "\n";
-                nb_erreur++;
-            }
-            if(p.m_blocks_array[i].get_orientation() != (orientation ? Orientation::vertical : Orientation::horizontal)) {
-                std::cout << "Lecture fichier bloc " << i << ": Orientation erronnée: " 
-                << (p.m_blocks_array[i].get_orientation() == Orientation::vertical ? "vertical" : "horizontal") 
-                << " au lieu de " 
-                << (orientation == 1 ? "vertical" : "horizontal") 
-                << "\n";
-                nb_erreur++;
-            }
-            if(winning && i != get_winning_block()) {
-                std::cout << "Lecture fichier bloc " << i << ": Winning block erronné: " << get_winning_block() << " au lieu de " << i << "\n";
-                nb_erreur++;
-            }
-            if(!winning && i == get_winning_block()) {
-                std::cout << "Lecture fichier bloc " << i << ": Winning block erronné: " << i << " marqué comme victorieux.\n";
-            }
-        }
-
-        file.close();
-    }
     if(nb_erreur != 0)
         return false;
     return true;
-
 }
