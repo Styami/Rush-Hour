@@ -24,7 +24,7 @@ private:
     };
     RPL::consoleWindow m_window;
 
-    std::size_t m_blocks_count;
+    std::size_t m_color_count;
     Color* m_block_color;
 };
 

@@ -3,41 +3,41 @@
 Contient des struct et foncitons utiles un peu partout dans le code
 */
 
-std::ostream& operator<<(std::ostream& os, const int2& a) {
+std::ostream& operator<<(std::ostream& os, const uint2& a) {
     os << "(" << a.x << ", " << a.y << ")";
     return os;
 }
 
-int2::int2() :
+uint2::uint2() :
     x(0), y(0)
 {}
 
-int2::int2(int x_, int y_) :
+uint2::uint2(unsigned int x_, unsigned int y_) :
     x(x_), y(y_)
 {}
 
-int2 int2::operator+(int2 a) {
-    return (int2){x + a.x, y + a.y};
+uint2 uint2::operator+(uint2 a) {
+    return (uint2){x + a.x, y + a.y};
 }
 
-int2 int2::operator-(int2 a) {
-    return (int2){x - a.x, y - a.y};
+uint2 uint2::operator-(uint2 a) {
+    return (uint2){x - a.x, y - a.y};
 }
 
-int2 int2::operator*(int2 a) {
-    return (int2){x * a.x, y * a.y};
+uint2 uint2::operator*(uint2 a) {
+    return (uint2){x * a.x, y * a.y};
 }
 
-int2 int2::operator/(int2 a) {
-    return (int2){x / a.x, y / a.y};
+uint2 uint2::operator/(uint2 a) {
+    return (uint2){x / a.x, y / a.y};
 }
 
-int2 int2::operator*(int a) {
-    return (int2){x * a, y * a};
+uint2 uint2::operator*(unsigned int a) {
+    return (uint2){x * a, y * a};
 }
 
-int2 int2::operator/(int a) {
-    return (int2){x / a, y / a};
+uint2 uint2::operator/(unsigned int a) {
+    return (uint2){x / a, y / a};
 }
 
 int human_readable(const char& _bit_char) {

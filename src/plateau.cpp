@@ -33,27 +33,10 @@ Plateau::Plateau(Plateau&& p) :
     p.m_blocks_array = nullptr;
 }
 
-Plateau::Plateau(const std::string& file_path)
+Plateau::Plateau(const std::string& file_path) :
+    m_blocks_array(nullptr)
 {
-    std::ifstream file(file_path);
-    assert(file.is_open());
-    unsigned int block_count;
-    
-    file >> block_count;
-    
-    set_block_count(block_count);
-    m_blocks_array = new Bloc[block_count];
-
-    int x, y, size, orientation, winning;
-
-    for(std::size_t i = 0; i < block_count; i++) {
-        file >> x >> y >> size >> orientation >> winning;
-        m_blocks_array[i].set_data(x, y, (bool)size, orientation ? Orientation::vertical : Orientation::horizontal);
-        if(winning)
-            set_winning_block(i);
-    }
-    
-    file.close();
+    charger(file_path);
 }
 
 Plateau& Plateau::operator=(Plateau&& p) {
@@ -75,14 +58,14 @@ void Plateau::clear_collision_array() {
     s_plateau_data &= 0xfffffff000000000;
 }
 
-void Plateau::add_collision(int2 pos) {
+void Plateau::add_collision(uint2 pos) {
     uint64_t encoded_pos = 1;
     encoded_pos <<= pos.y * 6;
     encoded_pos <<= pos.x;
     s_plateau_data |= encoded_pos;
 }
 
-bool Plateau::test_collision(int2 pos) {
+bool Plateau::test_collision(uint2 pos) {
     uint64_t encoded_pos = 1;
     encoded_pos <<= pos.y * 6;
     encoded_pos <<= pos.x;
@@ -122,7 +105,7 @@ void Plateau::load() {
     clear_collision_array();
 
     for(std::size_t i = 0 ; i < get_block_count(); i++) {
-        int2 coords = m_blocks_array[i].get_coord();
+        uint2 coords = m_blocks_array[i].get_coord();
 
         for(int j = 0; j < m_blocks_array[i].get_size(); j++) {
             add_collision(coords);
@@ -171,7 +154,7 @@ bool Plateau::est_gagnant() const{
 
 bool Plateau::can_block_move(int block_index, int displacement) {
     Bloc& b = s_loaded_plateau->m_blocks_array[block_index];
-    int2 coords = b.get_coord();
+    uint2 coords = b.get_coord();
 
     int offset = displacement + (displacement > 0 ? b.get_size() - 1 : 0);
     if(b.get_orientation() == Orientation::horizontal)
@@ -188,7 +171,7 @@ bool Plateau::can_block_move(int block_index, int displacement) {
 std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) {
     std::vector<Bloc> res;
     Bloc& b = s_loaded_plateau->m_blocks_array[block_index];
-    int2 new_coord = b.get_coord();
+    uint2 new_coord = b.get_coord();
     
     if(b.get_orientation() == Orientation::horizontal)
         new_coord.x += displacement;
@@ -201,65 +184,6 @@ std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) 
     res[block_index].set_coord(new_coord);
 
     return make_unique<Plateau>(res);
-}
-
-
-//
-//
-//     TESTS UNITAIRES
-//
-//
-
-void static load_blocs_map(bool* arr, const Bloc* p, std::size_t p_size) {
-    for(int i = 0; i < 36; i++)
-        arr[i] = false;
-    for(std::size_t i = 0; i < p_size; i++) {
-        int2 coords = p[i].get_coord();
-        int2 insert_coords = coords;
-        uint8_t size = p[i].get_size();
-
-        for(int j = 0; j < size; j++) {
-            arr[insert_coords.x + insert_coords.y * 6] = 1;
-            if(p[i].get_orientation() == Orientation::horizontal)
-                insert_coords.x++;
-            else
-                insert_coords.y++;
-        }
-    }
-}
-
-void Plateau::get_collision_array(bool* array) {
-    for(int i = 0; i < 36; i++) {
-        array[i] = test_collision(i);
-    } 
-}
-
-static void print_debug_tab(bool* blocs_map, bool* collision_array) {
-    for(int j = 0; j < 6; j++) {
-        std::cout << " ";
-        for(int i = 0; i < 6; i++)
-            std::cout << blocs_map[i + j * 6] << " ";
-        std::cout << "        ";
-        for(int i = 0; i < 6; i++)
-            std::cout << collision_array[i + j * 6] << " ";
-        std::cout << "\n";
-    }
-}
-
-void Plateau::test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur) {
-    if(p.can_block_move(index, displacement) != expected_result) {
-        nb_erreur++;
-        std::cout << "Le bloc d'index " << index << 
-            (expected_result == false ? "ne" : "") <<
-            " devrait " <<
-            (expected_result == false ? "pas" : "") <<
-            " pouvoir se déplacer de " << abs(displacement) << " vers ";
-        if(p.m_blocks_array[index].get_orientation() == Orientation::horizontal)
-            std::cout << (displacement < 0 ? "la gauche" : "la droite");
-        else
-            std::cout << (displacement < 0 ? "le haut" : "le bas");
-        std::cout << "\n";
-    }
 }
 
 bool Plateau::operator==(const Plateau& p) const {
@@ -284,9 +208,180 @@ std::size_t Plateau::hash() const {
     return new_hash;
 }
 
+void Plateau::sauvegarder(std::string file_path) 
+{
+    std::ofstream file(file_path);
+
+    file << (unsigned char)get_block_count();
+    file << (unsigned char)get_winning_block();
+
+    for(std::size_t i = 0 ; i < get_block_count(); i++) {
+        file << m_blocks_array[i].get_raw();
+    }
+
+    file.close();
+}
+
+void Plateau::charger(std::string file_path) 
+{
+    std::ifstream file(file_path);
+    assert(file.is_open());
+    unsigned char read;
+
+    // Nombre de block
+    read = file.get();
+    set_block_count(read);
+
+    // Allocation mémoire du tableau
+    if(m_blocks_array != nullptr)
+        delete [] m_blocks_array;
+    m_blocks_array = new Bloc[get_block_count()];
+
+    // Bloc gagnant
+    read = file.get();
+    set_winning_block(read);
+
+    // Création des blocs
+    for(std::size_t i = 0; i < get_block_count(); i++) {
+        read = file.get();
+        m_blocks_array[i].set_data(read);
+    }
+    file.close();
+}
+
+//
+//
+//     TESTS UNITAIRES
+//
+//
+
+void static load_blocs_map(bool* arr, const Bloc* p, std::size_t p_size) {
+    for(int i = 0; i < 36; i++)
+        arr[i] = false;
+    for(std::size_t i = 0; i < p_size; i++) {
+        uint2 coords = p[i].get_coord();
+        uint2 insert_coords = coords;
+        uint8_t size = p[i].get_size();
+
+        for(int j = 0; j < size; j++) {
+            arr[insert_coords.x + insert_coords.y * 6] = 1;
+            if(p[i].get_orientation() == Orientation::horizontal)
+                insert_coords.x++;
+            else
+                insert_coords.y++;
+        }
+    }
+}
+
+void Plateau::get_collision_array(bool* array) {
+    for(int i = 0; i < 36; i++) {
+        array[i] = test_collision(i);
+    } 
+}
+
+bool Plateau::test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur) {
+    if(p.can_block_move(index, displacement) != expected_result) {
+        nb_erreur++;
+        std::cout << "Le bloc d'index " << index << 
+            (expected_result == false ? "ne" : "") <<
+            " devrait " <<
+            (expected_result == false ? "pas" : "") <<
+            " pouvoir se déplacer de " << abs(displacement) << " vers ";
+        if(p.m_blocks_array[index].get_orientation() == Orientation::horizontal)
+            std::cout << (displacement < 0 ? "la gauche" : "la droite");
+        else
+            std::cout << (displacement < 0 ? "le haut" : "le bas");
+        std::cout << "\n";
+        return true;
+    }
+    return false;
+}
+
+static void print_debug_tab(bool* blocs_map, bool* collision_array) {
+    for(int j = 0; j < 6; j++) {
+        std::cout << " ";
+        for(int i = 0; i < 6; i++)
+            std::cout << blocs_map[i + j * 6] << " ";
+        std::cout << "        ";
+        for(int i = 0; i < 6; i++)
+            std::cout << collision_array[i + j * 6] << " ";
+        std::cout << "\n";
+    }
+}
+
+void Plateau::test_lecture_ecriture(int& nb_erreur) {
+// Test chargement
+    std::ifstream file("data/test_data_human_readable.rh");
+    unsigned int block_count, winning, x, y, size, orientation;
+
+    file >> block_count;
+    Plateau p_init((unsigned int)block_count);
+
+    file >> winning;
+    p_init.set_winning_block(winning);
+    for(std::size_t i = 0; i < (std::size_t)block_count; i++)
+    {
+        file >> x >> y >> size >> orientation;
+        (p_init.m_blocks_array[i]).set_data(
+            x, y,
+            size,
+            (orientation ? Orientation::vertical : Orientation::horizontal)
+        );
+    }
+
+    p_init.sauvegarder("data/test_data_save.rh");
+
+    file.clear();
+    file.seekg(0);
+    
+    Plateau p_load("data/test_data_save.rh");
+
+    file >> block_count;
+    if(get_block_count() != block_count) {
+        std::cout << "Lecture fichier: Block Count erronné: " << get_block_count() << " au lieu de " << block_count << "\n";
+        nb_erreur++;
+    }
+
+    file >> winning;
+    if(get_winning_block() != winning) {
+        std::cout << "Lecture fichier: Winning block erronné: " << get_winning_block() << " au lieu de " << winning << "\n";
+        nb_erreur++;
+    }
+    
+    for(std::size_t i = 0; i < block_count; i++) {
+        file >> x >> y >> size >> orientation;
+        size = (size ? 3 : 2);
+
+        if(p_load.m_blocks_array[i].get_coord().x != x) {
+            std::cout << "Lecture fichier bloc " << i << ": Coordonnée x erronnées: " << p_load.m_blocks_array[i].get_coord().x << " au lieu de " << x << "\n";
+            nb_erreur++;
+        }
+        if(p_load.m_blocks_array[i].get_coord().y != y) {
+            std::cout << "Lecture fichier bloc " << i << ": Coordonnée y erronnées: " << p_load.m_blocks_array[i].get_coord().y << " au lieu de " << y << "\n";
+            nb_erreur++;
+        }
+        if(p_load.m_blocks_array[i].get_size() != size) {
+            std::cout << "Lecture fichier bloc " << i << ": Taille erronnée: " << (int) p_load.m_blocks_array[i].get_size() << " au lieu de " << size << "\n";
+            nb_erreur++;
+        }
+        if(p_load.m_blocks_array[i].get_orientation() != (orientation ? Orientation::vertical : Orientation::horizontal)) {
+            std::cout << "Lecture fichier bloc " << i << ": Orientation erronnée: " 
+            << (p_load.m_blocks_array[i].get_orientation() == Orientation::vertical ? "vertical" : "horizontal") 
+            << " au lieu de " 
+            << (orientation == 1 ? "vertical" : "horizontal") 
+            << "\n";
+            nb_erreur++;
+        }
+    }
+
+    file.close();
+}
+
 bool Plateau::test() {
     int nb_erreur = 0;
     bool last_failed = false;
+
+    test_lecture_ecriture(nb_erreur);
 
     Plateau p(2);
     if(get_block_count() != 2) {
@@ -322,15 +417,16 @@ bool Plateau::test() {
         }
 
         // Test de can_block_move
-        test_can_block_move(p, 0, -1, true, nb_erreur);
-        test_can_block_move(p, 0, 1, true, nb_erreur);
-        test_can_block_move(p, 0, 2, false, nb_erreur);
-        test_can_block_move(p, 1, 1, true, nb_erreur);
-        test_can_block_move(p, 1, -1, true, nb_erreur);
-        test_can_block_move(p, 1, -2, true, nb_erreur);
+        last_failed = test_can_block_move(p, 0, -1, true, nb_erreur);
+        last_failed = test_can_block_move(p, 0, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 0, 2, false, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 1, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 1, -1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(p, 1, -2, true, nb_erreur) || last_failed;
 
         // Affichage en cas d'erreur
-        if(nb_erreur != 0) {
+        if(last_failed) {
+            last_failed = false;
             std::cout << "Données réelles:      Collision arr:\n";
             print_debug_tab(blocs_map, collision_array);
         }
@@ -369,15 +465,16 @@ bool Plateau::test() {
         }
 
         // Test de can_block_move
-        test_can_block_move(*p2, 0, -1, true, nb_erreur);
-        test_can_block_move(*p2, 0, -2, true, nb_erreur);
-        test_can_block_move(*p2, 0, 1, false, nb_erreur);
-        test_can_block_move(*p2, 1, 1, true, nb_erreur);
-        test_can_block_move(*p2, 1, -1, true, nb_erreur);
-        test_can_block_move(*p2, 1, -2, true, nb_erreur);
+        last_failed = test_can_block_move(*p2, 0, -1, true, nb_erreur);
+        last_failed = test_can_block_move(*p2, 0, -2, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 0, 1, false, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 1, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 1, -1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p2, 1, -2, true, nb_erreur) || last_failed;
         
         // Affichage en cas d'erreur
-        if(nb_erreur != 0) {
+        if(last_failed) {
+            last_failed = false;
             std::cout << "Données réelles:      Collision arr:\n";
             print_debug_tab(blocs_map, collision_array);
         }
@@ -417,70 +514,22 @@ bool Plateau::test() {
         }
 
         // Test de can_block_move
-        test_can_block_move(*p3, 0, -1, true, nb_erreur);
-        test_can_block_move(*p3, 0, -2, true, nb_erreur);
-        test_can_block_move(*p3, 0, 1, false, nb_erreur);
-        test_can_block_move(*p3, 1, 1, true, nb_erreur);
-        test_can_block_move(*p3, 1, 2, true, nb_erreur);
-        test_can_block_move(*p3, 1, -1, true, nb_erreur);
+        last_failed = test_can_block_move(*p3, 0, -1, true, nb_erreur);
+        last_failed = test_can_block_move(*p3, 0, -2, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 0, 1, false, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 1, 1, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 1, 2, true, nb_erreur) || last_failed;
+        last_failed = test_can_block_move(*p3, 1, -1, true, nb_erreur) || last_failed;
 
         // Affichage en cas d'erreur
-        if(nb_erreur != 0) {
+        if(last_failed) {
+            last_failed = false;
             std::cout << "Données réelles:      Collision arr:\n";
             print_debug_tab(blocs_map, collision_array);
         }
     }
 
-    {
-        Plateau p("data/niveau0.rh");
-        std::ifstream file("data/niveau0.rh");
-
-        std::size_t block_count;
-        file >> block_count;
-        if(get_block_count() != block_count) {
-            std::cout << "Lecture fichier: Block Count erronné: " << get_block_count() << " au lieu de " << block_count << "\n";
-            nb_erreur++;
-        }
-
-        int x, y, size, orientation, winning;
-        
-        for(std::size_t i = 0; i < block_count; i++) {
-            file >> x >> y >> size >> orientation >> winning;
-            size = (size ? 3 : 2);
-
-            if(p.m_blocks_array[i].get_coord().x != x) {
-                std::cout << "Lecture fichier bloc " << i << ": Coordonnée x erronnées: " << p.m_blocks_array[i].get_coord().x << " au lieu de " << x << "\n";
-                nb_erreur++;
-            }
-            if(p.m_blocks_array[i].get_coord().y != y) {
-                std::cout << "Lecture fichier bloc " << i << ": Coordonnée y erronnées: " << p.m_blocks_array[i].get_coord().y << " au lieu de " << y << "\n";
-                nb_erreur++;
-            }
-            if(p.m_blocks_array[i].get_size() != size) {
-                std::cout << "Lecture fichier bloc " << i << ": Taille erronnée: " << (int) p.m_blocks_array[i].get_size() << " au lieu de " << size << "\n";
-                nb_erreur++;
-            }
-            if(p.m_blocks_array[i].get_orientation() != (orientation ? Orientation::vertical : Orientation::horizontal)) {
-                std::cout << "Lecture fichier bloc " << i << ": Orientation erronnée: " 
-                << (p.m_blocks_array[i].get_orientation() == Orientation::vertical ? "vertical" : "horizontal") 
-                << " au lieu de " 
-                << (orientation == 1 ? "vertical" : "horizontal") 
-                << "\n";
-                nb_erreur++;
-            }
-            if(winning && i != get_winning_block()) {
-                std::cout << "Lecture fichier bloc " << i << ": Winning block erronné: " << get_winning_block() << " au lieu de " << i << "\n";
-                nb_erreur++;
-            }
-            if(!winning && i == get_winning_block()) {
-                std::cout << "Lecture fichier bloc " << i << ": Winning block erronné: " << i << " marqué comme victorieux.\n";
-            }
-        }
-
-        file.close();
-    }
     if(nb_erreur != 0)
         return false;
     return true;
-
 }

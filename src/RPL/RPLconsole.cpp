@@ -29,6 +29,7 @@ consoleWindow::consoleWindow(unsigned int w, unsigned int h, const string& _titl
         bordered = true;
     }
 
+    draw_window();
 }
 
 consoleWindow::~consoleWindow() {
@@ -47,13 +48,11 @@ void consoleWindow::clear_window() {
 }
 
 void consoleWindow::draw_window() const{
-    int i, j;
-
     //Dessine le haut de la bordure
     if(bordered) {
         printf("┌%s", title.c_str());
         
-        for(i = 0; i < dimx * (spaced ? 2 : 1) - title.length(); i++) {
+        for(std::size_t i = 0; i < dimx * (spaced ? 2 : 1) - title.length(); i++) {
             
             printf("─");
         }
@@ -61,9 +60,9 @@ void consoleWindow::draw_window() const{
     }
 
 
-    for(j= 0; j < dimy; j++) {
+    for(int j= 0; j < dimy; j++) {
         if(bordered) printf("│");
-        for(i = 0; i < dimx; i++) {
+        for(int i = 0; i < dimx; i++) {
             printf("\e[%u;2;%u;%u;%um%c%c\e[0m", 
                 window[i + j * dimx].col_mode,  //%u
                 window[i + j * dimx].col.r,     //%u
@@ -80,7 +79,7 @@ void consoleWindow::draw_window() const{
     //Dessine le bas de la bordure
     if(bordered) {
         printf("└");
-        for(i = 0; i < dimx  * (spaced ? 2 : 1); i++) {
+        for(int i = 0; i < dimx  * (spaced ? 2 : 1); i++) {
             printf("─");
         }
         printf("┘\n");
@@ -119,21 +118,6 @@ void consoleWindow::print_char(int x, int y, const char* c) {
 void consoleWindow::print_char(int x, int y, const std::string& string) {
     print_char(x, y, string.c_str());
 }
-
-void consoleWindow::draw_logo() {
-    for(int j = 0; j<dimy; j++) {
-        for(int i=0; i<dimx + (bordered ? 2 : 0); i++) {
-            print_char(i, j, '*');
-        }
-    }
-    for(int j= 0; j < dimy; j++) {
-        for(int i = 0; i < dimx; i++) {
-            printf("\e[%u;2;%u;%u;%um%c\e[0m", window[i + j * dimx].col_mode, window[i + j * dimx].col.r, window[i + j * dimx].col.g, window[i + j * dimx].col.b, window[i + j * dimx].c);
-        }
-        printf("\n");
-    }
-}
-
 
 int consoleWindow::kbhit() {
     struct timeval tv;

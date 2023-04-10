@@ -78,6 +78,9 @@ public:
      */
     static std::size_t get_block_count();
 
+    void charger(std::string file_path);
+    void sauvegarder(std::string file_path);
+
     // 
     //     Gestion table de hashage
     // 
@@ -188,14 +191,14 @@ private:
      *  Écrit cette information sur s_plateau_data
      * @param pos Coordonnée de la case
      */
-    static void add_collision(int2 pos);
+    static void add_collision(uint2 pos);
 
     /**
      * @brief Test si la case est occupé par un bloc
      *  Lit cette information depuis s_plateau_data
      * @param pos Coordonnée de la case a tester
      */
-    static bool test_collision(int2 pos);
+    static bool test_collision(uint2 pos);
     static bool test_collision(int index);
 
     /**
@@ -224,7 +227,8 @@ private:
     //      Test unitaires
     // 
 
-    static void test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur);
+    static void test_lecture_ecriture(int& nb_erreur);
+    static bool test_can_block_move(const Plateau& p, int index, int displacement, bool expected_result, int& nb_erreur);
     static void get_collision_array(bool* array);
 };
 

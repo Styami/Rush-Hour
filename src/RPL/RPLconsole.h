@@ -165,12 +165,6 @@ private:
     std::string title;
 
     /**
-     * @brief Rempli le buffer par le logo et l'affiche
-     * Permet un positionnement du curseur propre
-     */
-    void draw_logo();
-
-    /**
      * @brief Vérifie si une touche est appuyée
      * 
      * @return int 
