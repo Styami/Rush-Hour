@@ -1,49 +1,41 @@
 #include "Sommets.hpp"
+#include <memory>
 
-Sommets::Sommets(std::unique_ptr<Plateau> element) :
-    m_element(std::move(element)),
+Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
+    m_plateau(std::move(plateau)),
     m_traite(false),
-    distance(0)
+    m_distance(0)
 {}
 
-Sommets& Sommets::operator=(Sommets&& s)
-{
-    if(this != &s) {
-        m_element = std::move(s.m_element);
-        s.m_element = nullptr;
-        m_chemin_voisins = std::move(s.m_chemin_voisins);
-        m_traite = s.m_traite;
-        s.m_traite = true;
-        distance = s.distance;
-        s.distance = 0;
-    }
-    return *this;
-}
-
-void Sommets::link(Sommets* som, int poids){
+void Sommets::link(std::shared_ptr<Sommets> som, int poids){
+    //std::weak_ptr<Sommets> new_som=std::move(std::make_shared<Sommets>(som));
+    //std::cout << new_som << '\n';
     m_chemin_voisins.push_back({som, poids});
-    som->m_chemin_voisins.push_back({this,poids});
+    //std::weak_ptr<Sommets> sois_meme=std::move(std::make_shared<Sommets>(*this));
+    som->m_chemin_voisins.push_back({std::make_shared<Sommets>(*this), poids});
 }
 
-Plateau* Sommets::get_element() const{
-    return m_element.get();
+std::shared_ptr<Plateau> Sommets::get_plateau() const
+{
+    return m_plateau;
 }
 
-std::vector<const Sommets*> Sommets::get_node_neighbours() const{
-    std::vector<const Sommets*> res;
-    for(Lien node: m_chemin_voisins){
-        res.push_back(node.voisin);
+std::vector<std::shared_ptr<Sommets>> Sommets::get_voisins() const
+{
+    std::vector<std::shared_ptr<Sommets>> res;
+    for(Lien link: m_chemin_voisins){
+        res.push_back(link.voisin);
     }
     return res;
 }
 
-std::vector<std::unique_ptr<Plateau>> Sommets::generer(){
-    return m_element->get_neighbours();
+std::vector<std::unique_ptr<Plateau>> Sommets::generer_voisins(){
+    return m_plateau->get_neighbours();
 }
 
 Sommets::~Sommets(){
     m_traite = false;
-    distance = 0;
+    m_distance = 0;
     m_chemin_voisins.clear();
 }
 
