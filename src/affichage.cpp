@@ -29,7 +29,7 @@ Window::~Window()
 }
 
 void Window::dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count) {
-    int2 pos;
+    uint2 pos;
 
     m_window.set_color(0, 0, 0);
     m_window.clear_window();

@@ -191,14 +191,14 @@ private:
      *  Écrit cette information sur s_plateau_data
      * @param pos Coordonnée de la case
      */
-    static void add_collision(int2 pos);
+    static void add_collision(uint2 pos);
 
     /**
      * @brief Test si la case est occupé par un bloc
      *  Lit cette information depuis s_plateau_data
      * @param pos Coordonnée de la case a tester
      */
-    static bool test_collision(int2 pos);
+    static bool test_collision(uint2 pos);
     static bool test_collision(int index);
 
     /**

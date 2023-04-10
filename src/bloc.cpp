@@ -13,8 +13,8 @@ Bloc::Bloc(const Bloc& b) :
     m_data(b.m_data)
 {}
 
-int2 Bloc::get_coord() const {
-    return int2(
+uint2 Bloc::get_coord() const {
+    return uint2(
         (m_data & 0b11100000) >> 5,
         (m_data & 0b00011100) >> 2
     );
@@ -48,7 +48,7 @@ char& Bloc::set_data(char raw_data) {
     return m_data;
 }
 
-void Bloc::set_coord(int2 new_coord) {
+void Bloc::set_coord(uint2 new_coord) {
     char data = new_coord.x;
     data <<=3;
     data += new_coord.y;
@@ -64,7 +64,7 @@ std::ostream& operator<<(std::ostream& os, Bloc& a) {
 bool Bloc::test() {
     int nb_erreur = 0;
 
-    int2 coord(0, 0);
+    uint2 coord(0, 0);
     uint8_t size;
     Orientation o;
 
@@ -135,7 +135,7 @@ bool Bloc::test() {
         nb_erreur++;
     }
 
-    b.set_coord(int2(4, 2));
+    b.set_coord(uint2(4, 2));
     coord = b.get_coord();
     if(coord.x != 4 || coord.y != 2) {
         std::cout << "Erreur dans set coord: (4, 2) attendu, mais " << coord << " lu.\n";

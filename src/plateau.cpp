@@ -58,14 +58,14 @@ void Plateau::clear_collision_array() {
     s_plateau_data &= 0xfffffff000000000;
 }
 
-void Plateau::add_collision(int2 pos) {
+void Plateau::add_collision(uint2 pos) {
     uint64_t encoded_pos = 1;
     encoded_pos <<= pos.y * 6;
     encoded_pos <<= pos.x;
     s_plateau_data |= encoded_pos;
 }
 
-bool Plateau::test_collision(int2 pos) {
+bool Plateau::test_collision(uint2 pos) {
     uint64_t encoded_pos = 1;
     encoded_pos <<= pos.y * 6;
     encoded_pos <<= pos.x;
@@ -105,7 +105,7 @@ void Plateau::load() {
     clear_collision_array();
 
     for(std::size_t i = 0 ; i < get_block_count(); i++) {
-        int2 coords = m_blocks_array[i].get_coord();
+        uint2 coords = m_blocks_array[i].get_coord();
 
         for(int j = 0; j < m_blocks_array[i].get_size(); j++) {
             add_collision(coords);
@@ -154,7 +154,7 @@ bool Plateau::est_gagnant() const{
 
 bool Plateau::can_block_move(int block_index, int displacement) {
     Bloc& b = s_loaded_plateau->m_blocks_array[block_index];
-    int2 coords = b.get_coord();
+    uint2 coords = b.get_coord();
 
     int offset = displacement + (displacement > 0 ? b.get_size() - 1 : 0);
     if(b.get_orientation() == Orientation::horizontal)
@@ -171,7 +171,7 @@ bool Plateau::can_block_move(int block_index, int displacement) {
 std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) {
     std::vector<Bloc> res;
     Bloc& b = s_loaded_plateau->m_blocks_array[block_index];
-    int2 new_coord = b.get_coord();
+    uint2 new_coord = b.get_coord();
     
     if(b.get_orientation() == Orientation::horizontal)
         new_coord.x += displacement;
@@ -259,8 +259,8 @@ void static load_blocs_map(bool* arr, const Bloc* p, std::size_t p_size) {
     for(int i = 0; i < 36; i++)
         arr[i] = false;
     for(std::size_t i = 0; i < p_size; i++) {
-        int2 coords = p[i].get_coord();
-        int2 insert_coords = coords;
+        uint2 coords = p[i].get_coord();
+        uint2 insert_coords = coords;
         uint8_t size = p[i].get_size();
 
         for(int j = 0; j < size; j++) {

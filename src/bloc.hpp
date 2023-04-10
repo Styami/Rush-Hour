@@ -30,7 +30,7 @@ public:
     Bloc(const Bloc& b);
 
     // Renvoie un int2 contenant la position x et y du bloc
-    int2 get_coord() const;
+    uint2 get_coord() const;
 
     /**
      * @brief Renvoie la longueur du bloc
@@ -69,7 +69,7 @@ public:
      * 
      * @param new_coord 
      */
-    void set_coord(int2 new_coord);
+    void set_coord(uint2 new_coord);
 
     friend std::ostream& operator<<(std::ostream& os, Bloc& a);
 

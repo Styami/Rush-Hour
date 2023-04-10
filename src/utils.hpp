@@ -5,20 +5,20 @@
 #include <ostream>
 #include <math.h>
 
-struct int2 {
-    int x, y;
+struct uint2 {
+    unsigned int x, y;
 
-    int2();
-    int2(int x_, int y_);
+    uint2();
+    uint2(unsigned int x_, unsigned int y_);
 
-    int2 operator+(int2 a);
-    int2 operator-(int2 a);
-    int2 operator*(int2 a);
-    int2 operator/(int2 a);
-    int2 operator*(int a);
-    int2 operator/(int a);
+    uint2 operator+(uint2 a);
+    uint2 operator-(uint2 a);
+    uint2 operator*(uint2 a);
+    uint2 operator/(uint2 a);
+    uint2 operator*(unsigned int a);
+    uint2 operator/(unsigned int a);
 
-    friend std::ostream& operator<<(std::ostream& os, const int2& a);
+    friend std::ostream& operator<<(std::ostream& os, const uint2& a);
 };
 
 int human_readable(const char& _bit_char);
