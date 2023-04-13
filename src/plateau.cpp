@@ -311,7 +311,7 @@ static void print_debug_tab(bool* blocs_map, bool* collision_array) {
 
 void Plateau::test_lecture_ecriture(int& nb_erreur) {
 // Test chargement
-    std::ifstream file("data/test_data_human_readable.rh");
+    std::ifstream file("data/test/test_data_human_readable.rh");
     unsigned int block_count, winning, x, y, size, orientation;
 
     file >> block_count;
@@ -329,12 +329,12 @@ void Plateau::test_lecture_ecriture(int& nb_erreur) {
         );
     }
 
-    p_init.sauvegarder("data/test_data_save.rh");
+    p_init.sauvegarder("data/test/test_data_save.rh");
 
     file.clear();
     file.seekg(0);
     
-    Plateau p_load("data/test_data_save.rh");
+    Plateau p_load("data/test/test_data_save.rh");
 
     file >> block_count;
     if(get_block_count() != block_count) {
