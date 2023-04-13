@@ -21,7 +21,7 @@ obj/test.o: src/test.cpp
 obj/%.o: src/%.cpp src/%.hpp
 	g++ -g -c -Wall -std=c++20 -o $@ $<
 
-obj/%.o: src/RPL/%.cpp src/RPL/%.h
+obj/%.o: src/RPL/%.cpp src/RPL/%.hpp
 	g++ -g -c -Wall -std=c++20 -o $@ $<
 
 # Utiliataire

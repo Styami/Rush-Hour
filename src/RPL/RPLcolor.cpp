@@ -1,4 +1,4 @@
-#include "RPLcolor.h"
+#include "RPLcolor.hpp"
 #include <string>
 
 using namespace RPL;
