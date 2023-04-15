@@ -7,6 +7,24 @@ Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
     m_distance(0)
 {}
 
+Sommets::Sommets(const Sommets& s) :
+    m_plateau(s.m_plateau),
+    m_traite(s.m_traite),
+    m_distance((s.m_distance))
+{}
+
+Sommets::Sommets(Sommets&& s) :
+    m_plateau(std::move(s.m_plateau)),
+    m_traite(std::move(s.m_traite)),
+    m_distance(std::move(s.m_distance))
+{}
+
+Sommets::~Sommets(){
+    m_traite = false;
+    m_distance = 0;
+    m_chemin_voisins.clear();
+}
+
 void Sommets::link(std::shared_ptr<Sommets> som, int poids){
     //std::weak_ptr<Sommets> new_som=std::move(std::make_shared<Sommets>(som));
     //std::cout << new_som << '\n';
@@ -24,19 +42,13 @@ std::vector<std::shared_ptr<Sommets>> Sommets::get_voisins() const
 {
     std::vector<std::shared_ptr<Sommets>> res;
     for(Lien link: m_chemin_voisins){
-        res.push_back(link.voisin);
+        res.push_back(link.voisin.lock());
     }
     return res;
 }
 
 std::vector<std::unique_ptr<Plateau>> Sommets::generer_voisins(){
     return m_plateau->get_neighbours();
-}
-
-Sommets::~Sommets(){
-    m_traite = false;
-    m_distance = 0;
-    m_chemin_voisins.clear();
 }
 
 void Sommets::test(){

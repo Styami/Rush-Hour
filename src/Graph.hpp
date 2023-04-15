@@ -20,6 +20,7 @@ class Graph{
     public:
         Graph();
         Graph(std::shared_ptr<Sommets> node);
+        ~Graph();
 
         void charger_plateau(std::unique_ptr<Plateau> plateau);
 
@@ -27,7 +28,6 @@ class Graph{
         std::vector<std::shared_ptr<Sommets>> parcours(bool chercher_solution);
         static void test();
 
-        ~Graph();
 
 };
 #endif

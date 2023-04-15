@@ -129,12 +129,13 @@ void Window::determiner_menu_select()
     case choix_fichier:
         m_menu_entry = jeu;
         // Crée un plateau à partir du fichier sélectionné
-        m_graph->charger_plateau(std::make_unique<Plateau>(
-            "data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh"
-        ));
-        m_graph_result = m_graph->parcours(true)[0];
-        m_sommet_courrant = m_graph_result;
-
+        {
+            m_graph->charger_plateau(
+                std::make_unique<Plateau>("data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh")
+            );
+            m_graph_result = std::move(m_graph->parcours(true)[0]);
+            m_sommet_courrant = m_graph_result;
+        }
     break;
     case choix_difficulte:
 

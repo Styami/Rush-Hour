@@ -11,17 +11,36 @@ Graph::Graph(std::shared_ptr<Sommets> node) :
 Graph::Graph()
 {}
 
+Graph::~Graph() {
+    while(!m_file_noeud.empty())
+        m_file_noeud.pop();
+
+    // On rappel que m_racine est détenu par l'unordered map, et non pas par le graph
+    // elle sera donc bien libérée par cette boucle
+    for(auto &it:m_hash_map) {
+        //if(it.second != nullptr) // inutile à priori
+        it.second.reset();
+    }
+
+    m_hash_map.clear();
+}
+
 void Graph::charger_plateau(std::unique_ptr<Plateau> plateau) 
 {
-    std::shared_ptr<Sommets> s = make_shared<Sommets>(std::move(plateau));
+    std::shared_ptr<Sommets> s = std::make_shared<Sommets>(std::move(plateau));
+    m_hash_map.clear();
+    m_hash_map.insert(
+        std::pair<Plateau*, std::shared_ptr<Sommets>>(
+            s->get_plateau().get(), 
+            s
+        ));
     m_racine = s;
-    m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(s->get_plateau().get(), s));
 }
 
 void Graph::generer(std::shared_ptr<Sommets> node){
     std::vector<std::unique_ptr<Plateau>> plateaux_voisins = node->generer_voisins();
 
-    for(std::unique_ptr<Plateau>& plateau: plateaux_voisins){
+    for(std::unique_ptr<Plateau>& plateau : plateaux_voisins) {
         auto potentiel_sommet = m_hash_map.find(plateau.get());
 
         // le voisin est un noeud qui n'existait pas
@@ -58,6 +77,7 @@ void Graph::restart_parcours()
     for(auto &it:m_hash_map)
         it.second.reset();
 }
+
 std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool chercher_solution){
     std::vector<std::shared_ptr<Sommets>> res;
     m_file_noeud.push(m_racine.lock());
@@ -109,20 +129,6 @@ std::shared_ptr<Sommets> Graph::generer_lvl(std::vector<std::shared_ptr<Sommets>
     return current_node;
 }
 
-
-Graph::~Graph() {
-    while(!m_file_noeud.empty())
-        m_file_noeud.pop();
-
-    // On rappel que m_racine est détenu par l'unordered map, et non pas par le graph
-    // elle sera donc bien libérée par cette boucle
-    for(auto &it:m_hash_map) {
-        //if(it.second != nullptr) // inutile à priori
-        it.second.reset();
-    }
-
-    m_hash_map.clear();
-}
 
 void Graph::test(){
     //test constructeur
