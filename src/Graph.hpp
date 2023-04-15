@@ -12,14 +12,15 @@ class Graph{
     private:
         std::weak_ptr<Sommets> m_racine;
         std::unordered_map<Plateau*, std::shared_ptr<Sommets>, Plateau::Thash, Plateau::Tequal> m_hash_map;
-        std::queue<std::weak_ptr<Sommets>> m_file_noeud;
+        std::queue<std::shared_ptr<Sommets>> m_file_noeud;
 
         void generer(std::shared_ptr<Sommets> node);
         void restart_parcours();
     public:
         Graph(std::shared_ptr<Sommets> node);
 
-        std::weak_ptr<Sommets> parcours(bool chercher_solution);
+        std::shared_ptr<Sommets> generer_lvl(std::vector<std::shared_ptr<Sommets>> solutions);
+        std::vector<std::shared_ptr<Sommets>> parcours(bool chercher_solution);
         static void test();
 
         ~Graph();

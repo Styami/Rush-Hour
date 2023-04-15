@@ -7,9 +7,12 @@ Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
     m_distance(0)
 {}
 
-void Sommets::link(Sommets& som, int poids){
+void Sommets::link(std::shared_ptr<Sommets> som, int poids){
+    //std::weak_ptr<Sommets> new_som=std::move(std::make_shared<Sommets>(som));
+    //std::cout << new_som << '\n';
     m_chemin_voisins.push_back({som, poids});
-    som.m_chemin_voisins.push_back({*this, poids});
+    //std::weak_ptr<Sommets> sois_meme=std::move(std::make_shared<Sommets>(*this));
+    som->m_chemin_voisins.push_back({std::make_shared<Sommets>(*this), poids});
 }
 
 std::shared_ptr<Plateau> Sommets::get_plateau() const
@@ -17,11 +20,11 @@ std::shared_ptr<Plateau> Sommets::get_plateau() const
     return m_plateau;
 }
 
-std::vector<std::weak_ptr<Sommets>> Sommets::get_voisins() const
+std::vector<std::shared_ptr<Sommets>> Sommets::get_voisins() const
 {
-    std::vector<std::weak_ptr<Sommets>> res;
-    for(Lien node: m_chemin_voisins){
-        res.push_back(std::make_shared<Sommets>(node.voisin));
+    std::vector<std::shared_ptr<Sommets>> res;
+    for(Lien link: m_chemin_voisins){
+        res.push_back(link.voisin);
     }
     return res;
 }

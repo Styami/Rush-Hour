@@ -18,7 +18,7 @@ void Graph::generer(std::shared_ptr<Sommets> node){
             std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau));
 
             // On fait les liens avec le sommets actuel
-            node->link(*nouveau_sommet,1);
+            node->link(nouveau_sommet,1);
             nouveau_sommet->m_distance = 1 + node->m_distance;
             m_file_noeud.push(nouveau_sommet);
 
@@ -28,7 +28,7 @@ void Graph::generer(std::shared_ptr<Sommets> node){
         // le voisin est un noeud déjà existant
         else{ 
             // On fait les liens avec le sommets actuel
-            node->link(*potentiel_sommet->second,1);
+            node->link(potentiel_sommet->second,1);
             // Le plateau sera delete puisque c'est un unique ptr
         }
     }
@@ -36,7 +36,7 @@ void Graph::generer(std::shared_ptr<Sommets> node){
 
 void Graph::restart_parcours()
 {
-    std::shared_ptr<Sommets> tmp = m_file_noeud.front().lock();
+    std::shared_ptr<Sommets> tmp = m_file_noeud.front();
     while(!m_file_noeud.empty())
     {
         m_file_noeud.pop();
@@ -45,25 +45,55 @@ void Graph::restart_parcours()
     for(auto &it:m_hash_map)
         it.second.reset();
 }
-
-std::weak_ptr<Sommets> Graph::parcours(bool chercher_solution){
-    m_file_noeud.push(m_racine);
+std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool chercher_solution){
+    std::vector<std::shared_ptr<Sommets>> res;
+    m_file_noeud.push(m_racine.lock());
     std::shared_ptr<Sommets> current_noeud = nullptr;
     
     while(!m_file_noeud.empty())
     {
-        current_noeud = m_file_noeud.front().lock();
+        current_noeud = m_file_noeud.front();
         m_file_noeud.pop();
         
         if(!current_noeud->m_traite){
-            if(chercher_solution && current_noeud->get_plateau()->est_gagnant())
-                break;
+            if(current_noeud->get_plateau()->est_gagnant()){
+                res.push_back(current_noeud);
+                if(chercher_solution)
+                    break;
+            }
         
             generer(current_noeud);
             current_noeud->m_traite=true;
         }
     }
-    return current_noeud;
+    return res;
+}
+
+
+std::shared_ptr<Sommets> Graph::generer_lvl(std::vector<std::shared_ptr<Sommets>> solutions){
+    for(auto& it: m_hash_map){
+        it.second->m_traite=false;
+        it.second->m_distance=0;
+    }
+    for(std::shared_ptr<Sommets> s: solutions)
+        m_file_noeud.push(s);
+    
+    std::shared_ptr<Sommets> current_node;
+    while(!m_file_noeud.empty()){
+        current_node=m_file_noeud.front();
+        m_file_noeud.pop();
+        if(!current_node->m_traite){
+            for(std::shared_ptr<Sommets> s : current_node->get_voisins()){
+                if(!s->m_traite){
+                    m_file_noeud.push(s);
+                    s->m_distance=current_node->m_distance+1;
+                }
+            }
+            current_node->m_traite=true;
+        }
+    }
+    
+    return current_node;
 }
 
 
