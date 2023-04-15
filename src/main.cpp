@@ -5,7 +5,7 @@
 int main(){
     srand(time(NULL));
     
-    std::unique_ptr<Plateau> first_plat= std::make_unique<Plateau>("data/niveau_0.rh");
+    std::unique_ptr<Plateau> first_plat= std::make_unique<Plateau>("data/test_data_human_readable.rh");
     Window window(first_plat->get_block_count());
 
     std::unique_ptr<Sommets> node = std::make_unique<Sommets> (std::move(first_plat));
