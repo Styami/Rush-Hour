@@ -58,8 +58,11 @@ void Window::main_loop()
             m_window.clear_window();
             
             if(m_menu_entry == jeu)
-                ;
-                //dessiner_plateau(const Bloc *blocks_array, std::size_t blocks_count)
+            {
+                std::shared_ptr<Sommets> s = m_sommet_courrant.lock();
+                dessiner_plateau(s->get_plateau()->get_block_array(), s->get_plateau()->get_block_count());
+                // TODO: Récupérer l'antécédent du sommet actuel pour faire l'animation
+            }
             else
                 dessiner_menu();
 
@@ -77,7 +80,7 @@ void Window::dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count
     uint2 pos;
 
     for(std::size_t i = 0; i < blocks_count; i++) {
-        pos = blocks_array[i].get_coord();
+        pos = blocks_array[i].get_coord() * 2;
 
         m_window.set_color(m_block_color[i].r, m_block_color[i].g, m_block_color[i].b);
 
@@ -125,6 +128,12 @@ void Window::determiner_menu_select()
     break;
     case choix_fichier:
         m_menu_entry = jeu;
+        // Crée un plateau à partir du fichier sélectionné
+        m_graph->charger_plateau(std::make_unique<Plateau>(
+            "data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh"
+        ));
+        m_graph_result = m_graph->parcours(true)[0];
+        m_sommet_courrant = m_graph_result;
 
     break;
     case choix_difficulte:
@@ -281,12 +290,23 @@ void Window::test()
     Window w;
 
     Plateau p("data/test/test_data_save.rh");
+    //Plateau p("data/niveaux/niveau_0.rh");
+
+
+    w.m_window.set_color_mode(RPL::CONSOLE_COLOR_BACKGROUND);
+
+    w.m_window.set_color(0, 0, 0);
+    w.m_window.clear_window();
     w.dessiner_plateau(p.get_block_array(), p.get_block_count());
+    w.m_window.draw_window();
     
     std::vector<std::unique_ptr<Plateau>> pp = p.get_neighbours();
 
     for(std::size_t i = 0; i < pp.size(); i++) {
        getchar();
+       w.m_window.set_color(0, 0, 0);
+       w.m_window.clear_window();
        w.dessiner_plateau(pp[i]->get_block_array(), pp[i]->get_block_count());
+       w.m_window.draw_window();
     }
 }

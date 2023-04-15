@@ -5,8 +5,8 @@
 int main(){
     srand(time(NULL));
     
-    // TODO: faire la création du graph
-    Window window(16);
+    Graph g;
+    Window window(&g);
 
     window.main_loop();
 

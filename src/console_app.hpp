@@ -41,7 +41,9 @@ private:
     uint8_t m_string_display_offset;
 
     Graph* m_graph;
-
+    std::shared_ptr<Sommets> m_graph_result;
+    std::weak_ptr<Sommets> m_sommet_courrant;
+    
     /**
      * @brief Définit la palette de couleur pour la ligne de menu actuelle
      * selon si elle est sélectionnée ou non

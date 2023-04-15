@@ -1,6 +1,6 @@
 #include "bloc.hpp"
 #include "plateau.hpp"
-#include "affichage.hpp"
+#include "console_app.hpp"
 
 int main(void) {
     int err = 0;
