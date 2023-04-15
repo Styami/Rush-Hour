@@ -1,9 +1,22 @@
 #include "Graph.hpp"
+#include <memory>
 
 // m_racine n'est qu'une référence faible vers le sommet stocké dans la hashmap
 Graph::Graph(std::shared_ptr<Sommets> node) :
     m_racine(node)
-{m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(node->get_plateau().get(), node));}
+{
+    m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(node->get_plateau().get(), node));
+}
+
+Graph::Graph()
+{}
+
+void Graph::charger_plateau(std::unique_ptr<Plateau> plateau) 
+{
+    std::shared_ptr<Sommets> s = make_shared<Sommets>(std::move(plateau));
+    m_racine = s;
+    m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(s->get_plateau().get(), s));
+}
 
 void Graph::generer(std::shared_ptr<Sommets> node){
     std::vector<std::unique_ptr<Plateau>> plateaux_voisins = node->generer_voisins();
