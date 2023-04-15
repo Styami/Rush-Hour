@@ -8,10 +8,7 @@ Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
 {}
 
 void Sommets::link(std::shared_ptr<Sommets> som, int poids){
-    //std::weak_ptr<Sommets> new_som=std::move(std::make_shared<Sommets>(som));
-    //std::cout << new_som << '\n';
     m_chemin_voisins.push_back({som, poids});
-    //std::weak_ptr<Sommets> sois_meme=std::move(std::make_shared<Sommets>(*this));
     som->m_chemin_voisins.push_back({std::make_shared<Sommets>(*this), poids});
 }
 
@@ -40,13 +37,23 @@ Sommets::~Sommets(){
 }
 
 void Sommets::test(){
-    // Sommets<int>* n=new Sommets<int>(5);
-    // assert(n->get_element()==5);
-    // assert(n->m_traite==false);
-    // Sommets<int>* an=new Sommets<int> (6);
-    // n->link(an);
-    // an=nullptr;
-    // assert(n->m_voisins[0]->get_element()==6);
-    // delete n->m_voisins[0];
-    // n->m_voisins.clear();
+    Plateau plateau_test = Plateau("data/test_data_human_readable");
+    std::shared_ptr<Sommets> noeud_test = std::make_shared<Sommets>(std::make_unique<Plateau>("data/test_data_human_readable"));
+    assert(*noeud_test->get_plateau() == plateau_test);
+    assert(noeud_test->m_traite == false);
+    assert(noeud_test->m_distance == 0);
+    assert(noeud_test->precedent.expired());
+    assert(noeud_test->m_chemin_voisins.empty());
+
+    std::vector<std::unique_ptr<Plateau>> nouveaux_plateaux = noeud_test->generer_voisins();
+    assert(nouveaux_plateaux.empty() != false);
+    for(std::unique_ptr<Plateau>& nouveau_plateau : nouveaux_plateaux){
+        std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(nouveau_plateau));
+        noeud_test->link(nouveau_sommet,1);
+        nouveau_sommet->precedent = noeud_test;
+        assert(nouveau_sommet->precedent.expired() == false);
+    }
+    
+    std::vector<std::shared_ptr<Sommets>> voisins = noeud_test->get_voisins();
+    assert(voisins.size() == noeud_test->m_chemin_voisins.size());
 }
