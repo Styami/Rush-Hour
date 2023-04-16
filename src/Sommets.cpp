@@ -38,6 +38,7 @@ Sommets::~Sommets(){
 
 void Sommets::test(){
     Plateau plateau_test = Plateau("data/test_data_human_readable");
+    //test constructeur
     std::shared_ptr<Sommets> noeud_test = std::make_shared<Sommets>(std::make_unique<Plateau>("data/test_data_human_readable"));
     assert(*noeud_test->get_plateau() == plateau_test);
     assert(noeud_test->m_traite == false);
@@ -45,15 +46,21 @@ void Sommets::test(){
     assert(noeud_test->precedent.expired());
     assert(noeud_test->m_chemin_voisins.empty());
 
+    //test sur la génération des voisins
     std::vector<std::unique_ptr<Plateau>> nouveaux_plateaux = noeud_test->generer_voisins();
     assert(nouveaux_plateaux.empty() != false);
     for(std::unique_ptr<Plateau>& nouveau_plateau : nouveaux_plateaux){
         std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(nouveau_plateau));
         noeud_test->link(nouveau_sommet,1);
+        assert(nouveau_sommet->m_chemin_voisins[0].voisin != nullptr);
         nouveau_sommet->precedent = noeud_test;
         assert(nouveau_sommet->precedent.expired() == false);
     }
     
+    //test permettant de savoir si le linkage à bien eu lieu
     std::vector<std::shared_ptr<Sommets>> voisins = noeud_test->get_voisins();
+    for(std::shared_ptr<Sommets> voisin : voisins){
+        assert(voisin != nullptr);
+    }
     assert(voisins.size() == noeud_test->m_chemin_voisins.size());
 }
