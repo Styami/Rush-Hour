@@ -4,6 +4,7 @@
 #include <iostream>
 #include "Sommets.hpp"
 #include <unordered_map>
+#include <assert.h>
 
 
 

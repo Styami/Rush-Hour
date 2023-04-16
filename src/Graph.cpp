@@ -85,11 +85,13 @@ std::shared_ptr<Sommets> Graph::generer_lvl(std::vector<std::shared_ptr<Sommets>
     while(!m_file_noeud.empty()){
         current_node=m_file_noeud.front();
         m_file_noeud.pop();
+
         if(!current_node->m_traite){
             for(std::shared_ptr<Sommets> s : current_node->get_voisins()){
                 if(!s->m_traite){
                     m_file_noeud.push(s);
                     s->m_distance=current_node->m_distance+1;
+                    s->precedent=current_node;
                 }
             }
             current_node->m_traite=true;
@@ -115,6 +117,16 @@ Graph::~Graph() {
 }
 
 void Graph::test(){
+    Graph graph_test = Graph(std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/test_data_human_readable"))));
+    //test constructeur
+    assert(graph_test.m_hash_map.empty());
+    assert(graph_test.m_file_noeud.empty());
+
+    //tests de parcours
+    std::vector<std::shared_ptr<Sommets>> solutions;
+    solutions = graph_test.parcours(true);
+    assert(solutions.size() == 1);
+
     //test constructeur
     // Graph graph_test(new Sommets<int>(3));
     // assert(graph_test.m_noeud->get_plateau()==3);
@@ -124,18 +136,3 @@ void Graph::test(){
     // assert(graph_test.m_file_noeud.size()==5);
 
 }
-
-
-
-/*
-    fichier
-    plateau
-
-    on cherche une solution
-    y a une solution -> stock solution
-    y en a pas -> on charge un autre truc
-
-    L'autre chose à faire c'est trouver des problèmes intéressant
-    On part de la solution -> on cherche chemin le plus long.
-
-*/
