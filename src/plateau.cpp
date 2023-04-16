@@ -58,33 +58,27 @@ static void melanger(uint2* array, std::size_t count)
 {
     uint2 swap;
     int cur_count = count;
-    for(int i = 0; i < count; i++)
+    for(int i = 0; i < count - 1; i++)
     {
         int index = rand() % cur_count;
-        swap = array[cur_count];
-        array[cur_count] = array[index];
+        swap = array[cur_count - 1];
+        array[cur_count - 1] = array[index];
         array[index] = swap;
 
         cur_count--;
     }
 }
 
-static Orientation random_orientation()
-{
-    return (rand() % 2 ? Orientation::horizontal : Orientation::vertical);
-}
-
 bool Plateau::test_can_block_fit(uint2 pos, bool size, Orientation orientation)
 {
-    for(int j = 0 ; j < size; j++ ) {
-        if(test_collision(pos)) {
+    for(int j = 0 ; j < (size ? 3 : 2); j++ ) {
+        if(test_collision(pos) || pos.x > 5 || pos.y > 5) {
             return false;
-            if(orientation == Orientation::horizontal)
-                pos.x++;
-            else
-                pos.y++;
-            break;
         }
+        if(orientation == Orientation::horizontal)
+            pos.x++;
+        else
+            pos.y++;
     }
     return true;
 }
@@ -92,54 +86,73 @@ bool Plateau::test_can_block_fit(uint2 pos, bool size, Orientation orientation)
 void Plateau::generer_aleatoirement(int nb_block)
 {
 // Allocation mémoire
-    uint2 pos;
-    bool size;
-    Orientation orientation;
+    int start_bloc_y;
 
     if(m_blocks_array)
         delete [] m_blocks_array;
     m_blocks_array = new Bloc[nb_block];
     
 // On reset le tableau statique
-    clear_collision_array();
+    s_plateau_data = 0;
     set_block_count(nb_block);
     set_winning_block(0);
 
 // On génère d'abord le bloc à sortir
-    pos = {0, (unsigned int)(rand() % 6)};
+    start_bloc_y = (unsigned int)(rand() % 6);
 
-    m_blocks_array[0].set_data(pos.x, pos.y, rand() % 2, Orientation::horizontal);
+    m_blocks_array[0].set_data(0, start_bloc_y, rand() % 2, Orientation::horizontal);
     add_collision(m_blocks_array[0]);
 
 // On génère une liste de toutes les positions où l'on peut ajouter un bloc
+// Sauf l'angle inférieur droit qui ne peut pas accueillir de nouveau bloc
     uint2 random_pos[35];
     for(int i = 0; i < 35; i++)
     {
-        if(i / 6.f != pos.y) // On ne peut pas générer un bloc là où il y a déjà le premier
-            random_pos[i] = uint2(i % 6, i / 6.f);
+        random_pos[i] = uint2(i % 6, i / 6.f);
     }
     melanger(random_pos, 35);
 
+// On crée une liste des différents arrangement possible pour un bloc.
+// (size, orientation)
+    uint2 arrangement[4];
+    arrangement[0] = {0, 0};
+    arrangement[1] = {0, 1};
+    arrangement[2] = {1, 0};
+    arrangement[3] = {1, 1};
+
 // On génère nb_block - 1 blocs
-    int i = 0;
-    while(i < nb_block - 1)
+    int cur_gen = 1, i = 0;
+    while(cur_gen < nb_block)
     {
-        // On génère ses caractéristiques
-        pos = random_pos[i];
-        size = rand() % 2;
-        orientation = random_orientation();
+        // On test aléatoirement tous les arrangements possibles jusqu'à ce que ça fonctionne
+        // Si jamais aucun ne fonctionne, alors cette position peut être rayée de la liste des
+        //  possibilités
+        melanger(arrangement, 4);
+        for(int j = 0; j < 4; j++)
+        {
+            // On vérifie que le bloc qu'on ajoute n'empêche pas de sortir le bloc
+            if(random_pos[i].y == start_bloc_y && arrangement[j].y == 0)
+                continue;
 
-        // On ajoute le bloc s'il n'y a pas de collision
-        if(test_can_block_fit(random_pos[i], size, orientation)) {
-            m_blocks_array[i + 1].set_data(
-                random_pos[i].x, 
-                random_pos[i].y, 
-                size,
-                orientation);
-            add_collision(m_blocks_array[i + 1]);
-
-            i++;
+            // Si le bloc peut rentrer
+            if(test_can_block_fit(random_pos[i],
+                arrangement[j].x,
+                arrangement[j].y ? Orientation::vertical : Orientation::horizontal
+            )) {
+                // On l'ajoute au tableau
+                m_blocks_array[cur_gen].set_data(
+                    random_pos[i].x,
+                    random_pos[i].y,
+                    arrangement[j].x,
+                    arrangement[j].y ? Orientation::vertical : Orientation::horizontal
+                );
+                // Et à la table de collision
+                add_collision(m_blocks_array[cur_gen]);
+                cur_gen++;
+                break;
+            }
         }
+        i++;
     }
 }
 

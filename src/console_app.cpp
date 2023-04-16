@@ -303,11 +303,27 @@ void Window::test()
     
     std::vector<std::unique_ptr<Plateau>> pp = p.get_neighbours();
 
-    for(std::size_t i = 0; i < pp.size(); i++) {
-       getchar();
-       w.m_window.set_color(0, 0, 0);
-       w.m_window.clear_window();
-       w.dessiner_plateau(pp[i]->get_block_array(), pp[i]->get_block_count());
-       w.m_window.draw_window();
-    }
+    // for(std::size_t i = 0; i < pp.size(); i++) {
+    //    getchar();
+    //    w.m_window.set_color(0, 0, 0);
+    //    w.m_window.clear_window();
+    //    w.dessiner_plateau(pp[i]->get_block_array(), pp[i]->get_block_count());
+    //    w.m_window.draw_window();
+    // }
+
+    p.generer_aleatoirement(13);
+
+    getchar();
+    w.m_window.set_color(0, 0, 0);
+    w.m_window.clear_window();
+    w.dessiner_plateau(p.get_block_array(), p.get_block_count());
+    w.m_window.draw_window();
+
+    p.generer_aleatoirement(10);
+
+    getchar();
+    w.m_window.set_color(0, 0, 0);
+    w.m_window.clear_window();
+    w.dessiner_plateau(p.get_block_array(), p.get_block_count());
+    w.m_window.draw_window();
 }
