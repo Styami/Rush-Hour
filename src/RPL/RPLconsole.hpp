@@ -12,7 +12,7 @@
 
 #include <chrono>
 
-#include "RPLcolor.h"
+#include "RPLcolor.hpp"
 
 
 namespace RPL {

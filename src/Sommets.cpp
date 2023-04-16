@@ -7,6 +7,24 @@ Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
     m_distance(0)
 {}
 
+Sommets::Sommets(const Sommets& s) :
+    m_plateau(s.m_plateau),
+    m_traite(s.m_traite),
+    m_distance((s.m_distance))
+{}
+
+Sommets::Sommets(Sommets&& s) :
+    m_plateau(std::move(s.m_plateau)),
+    m_traite(std::move(s.m_traite)),
+    m_distance(std::move(s.m_distance))
+{}
+
+Sommets::~Sommets(){
+    m_traite = false;
+    m_distance = 0;
+    m_chemin_voisins.clear();
+}
+
 void Sommets::link(std::shared_ptr<Sommets> som, int poids){
     m_chemin_voisins.push_back({som, poids});
     som->m_chemin_voisins.push_back({std::make_shared<Sommets>(*this), poids});
@@ -21,19 +39,13 @@ std::vector<std::shared_ptr<Sommets>> Sommets::get_voisins() const
 {
     std::vector<std::shared_ptr<Sommets>> res;
     for(Lien link: m_chemin_voisins){
-        res.push_back(link.voisin);
+        res.push_back(link.voisin.lock());
     }
     return res;
 }
 
 std::vector<std::unique_ptr<Plateau>> Sommets::generer_voisins(){
     return m_plateau->get_neighbours();
-}
-
-Sommets::~Sommets(){
-    m_traite = false;
-    m_distance = 0;
-    m_chemin_voisins.clear();
 }
 
 void Sommets::test(){
@@ -52,7 +64,7 @@ void Sommets::test(){
     for(std::unique_ptr<Plateau>& nouveau_plateau : nouveaux_plateaux){
         std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(nouveau_plateau));
         noeud_test->link(nouveau_sommet,1);
-        assert(nouveau_sommet->m_chemin_voisins[0].voisin != nullptr);
+        assert(nouveau_sommet->m_chemin_voisins[0].voisin.expired());
         nouveau_sommet->precedent = noeud_test;
         assert(nouveau_sommet->precedent.expired() == false);
     }

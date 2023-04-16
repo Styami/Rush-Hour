@@ -54,15 +54,128 @@ Plateau::~Plateau() {
     delete [] m_blocks_array;
 }
 
+static void melanger(uint2* array, std::size_t count)
+{
+    uint2 swap;
+    int cur_count = count;
+    for(int i = 0; i < count - 1; i++)
+    {
+        int index = rand() % cur_count;
+        swap = array[cur_count - 1];
+        array[cur_count - 1] = array[index];
+        array[index] = swap;
+
+        cur_count--;
+    }
+}
+
+bool Plateau::test_can_block_fit(uint2 pos, bool size, Orientation orientation)
+{
+    for(int j = 0 ; j < (size ? 3 : 2); j++ ) {
+        if(test_collision(pos) || pos.x > 5 || pos.y > 5) {
+            return false;
+        }
+        if(orientation == Orientation::horizontal)
+            pos.x++;
+        else
+            pos.y++;
+    }
+    return true;
+}
+
+void Plateau::generer_aleatoirement(int nb_block)
+{
+// Allocation mémoire
+    int start_bloc_y;
+
+    if(m_blocks_array)
+        delete [] m_blocks_array;
+    m_blocks_array = new Bloc[nb_block];
+    
+// On reset le tableau statique
+    s_plateau_data = 0;
+    set_block_count(nb_block);
+    set_winning_block(0);
+
+// On génère d'abord le bloc à sortir
+    start_bloc_y = (unsigned int)(rand() % 6);
+
+    m_blocks_array[0].set_data(0, start_bloc_y, rand() % 2, Orientation::horizontal);
+    add_collision(m_blocks_array[0]);
+
+// On génère une liste de toutes les positions où l'on peut ajouter un bloc
+// Sauf l'angle inférieur droit qui ne peut pas accueillir de nouveau bloc
+    uint2 random_pos[35];
+    for(int i = 0; i < 35; i++)
+    {
+        random_pos[i] = uint2(i % 6, i / 6.f);
+    }
+    melanger(random_pos, 35);
+
+// On crée une liste des différents arrangement possible pour un bloc.
+// (size, orientation)
+    uint2 arrangement[4];
+    arrangement[0] = {0, 0};
+    arrangement[1] = {0, 1};
+    arrangement[2] = {1, 0};
+    arrangement[3] = {1, 1};
+
+// On génère nb_block - 1 blocs
+    int cur_gen = 1, i = 0;
+    while(cur_gen < nb_block)
+    {
+        // On test aléatoirement tous les arrangements possibles jusqu'à ce que ça fonctionne
+        // Si jamais aucun ne fonctionne, alors cette position peut être rayée de la liste des
+        //  possibilités
+        melanger(arrangement, 4);
+        for(int j = 0; j < 4; j++)
+        {
+            // On vérifie que le bloc qu'on ajoute n'empêche pas de sortir le bloc
+            if(random_pos[i].y == start_bloc_y && arrangement[j].y == 0)
+                continue;
+
+            // Si le bloc peut rentrer
+            if(test_can_block_fit(random_pos[i],
+                arrangement[j].x,
+                arrangement[j].y ? Orientation::vertical : Orientation::horizontal
+            )) {
+                // On l'ajoute au tableau
+                m_blocks_array[cur_gen].set_data(
+                    random_pos[i].x,
+                    random_pos[i].y,
+                    arrangement[j].x,
+                    arrangement[j].y ? Orientation::vertical : Orientation::horizontal
+                );
+                // Et à la table de collision
+                add_collision(m_blocks_array[cur_gen]);
+                cur_gen++;
+                break;
+            }
+        }
+        i++;
+    }
+}
+
 void Plateau::clear_collision_array() {
     s_plateau_data &= 0xfffffff000000000;
 }
 
-void Plateau::add_collision(uint2 pos) {
-    uint64_t encoded_pos = 1;
-    encoded_pos <<= pos.y * 6;
-    encoded_pos <<= pos.x;
-    s_plateau_data |= encoded_pos;
+void Plateau::add_collision(const Bloc& block) {
+    uint2 coords = block.get_coord();
+
+    for(int j = 0; j < block.get_size(); j++) {
+        uint64_t encoded_pos = 1;
+        encoded_pos <<= coords.y * 6;
+        encoded_pos <<= coords.x;
+        s_plateau_data |= encoded_pos;
+
+        if(block.get_orientation() == Orientation::horizontal)
+            coords.x++;
+        else
+            coords.y++;
+    }
+
+
 }
 
 bool Plateau::test_collision(uint2 pos) {
@@ -105,16 +218,7 @@ void Plateau::load() {
     clear_collision_array();
 
     for(std::size_t i = 0 ; i < get_block_count(); i++) {
-        uint2 coords = m_blocks_array[i].get_coord();
-
-        for(int j = 0; j < m_blocks_array[i].get_size(); j++) {
-            add_collision(coords);
-            
-            if(m_blocks_array[i].get_orientation() == Orientation::horizontal)
-                coords.x++;
-            else
-                coords.y++;
-        }
+        add_collision(m_blocks_array[i]);
     }
 }
 
@@ -183,7 +287,7 @@ std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) 
     }
     res[block_index].set_coord(new_coord);
 
-    return make_unique<Plateau>(res);
+    return std::make_unique<Plateau>(res);
 }
 
 bool Plateau::operator==(const Plateau& p) const {
@@ -311,7 +415,7 @@ static void print_debug_tab(bool* blocs_map, bool* collision_array) {
 
 void Plateau::test_lecture_ecriture(int& nb_erreur) {
 // Test chargement
-    std::ifstream file("data/test_data_human_readable.rh");
+    std::ifstream file("data/test/test_data_human_readable.rh");
     unsigned int block_count, winning, x, y, size, orientation;
 
     file >> block_count;
@@ -329,12 +433,12 @@ void Plateau::test_lecture_ecriture(int& nb_erreur) {
         );
     }
 
-    p_init.sauvegarder("data/test_data_save.rh");
+    p_init.sauvegarder("data/test/test_data_save.rh");
 
     file.clear();
     file.seekg(0);
     
-    Plateau p_load("data/test_data_save.rh");
+    Plateau p_load("data/test/test_data_save.rh");
 
     file >> block_count;
     if(get_block_count() != block_count) {
