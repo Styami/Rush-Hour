@@ -78,6 +78,8 @@ public:
      */
     static std::size_t get_block_count();
 
+    void generer_aleatoirement(int nb_block);
+
     void charger(std::string file_path);
     void sauvegarder(std::string file_path);
 
@@ -191,7 +193,7 @@ private:
      *  Écrit cette information sur s_plateau_data
      * @param pos Coordonnée de la case
      */
-    static void add_collision(uint2 pos);
+    static void add_collision(const Bloc& block);
 
     /**
      * @brief Test si la case est occupé par un bloc
@@ -200,6 +202,7 @@ private:
      */
     static bool test_collision(uint2 pos);
     static bool test_collision(int index);
+    bool test_can_block_fit(uint2 pos, bool size, Orientation orientation);
 
     /**
      * @brief Stock le nombre de bloc du plateau

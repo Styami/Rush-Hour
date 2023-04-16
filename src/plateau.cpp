@@ -54,15 +54,115 @@ Plateau::~Plateau() {
     delete [] m_blocks_array;
 }
 
+static void melanger(uint2* array, std::size_t count)
+{
+    uint2 swap;
+    int cur_count = count;
+    for(int i = 0; i < count; i++)
+    {
+        int index = rand() % cur_count;
+        swap = array[cur_count];
+        array[cur_count] = array[index];
+        array[index] = swap;
+
+        cur_count--;
+    }
+}
+
+static Orientation random_orientation()
+{
+    return (rand() % 2 ? Orientation::horizontal : Orientation::vertical);
+}
+
+bool Plateau::test_can_block_fit(uint2 pos, bool size, Orientation orientation)
+{
+    for(int j = 0 ; j < size; j++ ) {
+        if(test_collision(pos)) {
+            return false;
+            if(orientation == Orientation::horizontal)
+                pos.x++;
+            else
+                pos.y++;
+            break;
+        }
+    }
+    return true;
+}
+
+void Plateau::generer_aleatoirement(int nb_block)
+{
+// Allocation mémoire
+    uint2 pos;
+    bool size;
+    Orientation orientation;
+
+    if(m_blocks_array)
+        delete [] m_blocks_array;
+    m_blocks_array = new Bloc[nb_block];
+    
+// On reset le tableau statique
+    clear_collision_array();
+    set_block_count(nb_block);
+    set_winning_block(0);
+
+// On génère d'abord le bloc à sortir
+    pos = {0, (unsigned int)(rand() % 6)};
+
+    m_blocks_array[0].set_data(pos.x, pos.y, rand() % 2, Orientation::horizontal);
+    add_collision(m_blocks_array[0]);
+
+// On génère une liste de toutes les positions où l'on peut ajouter un bloc
+    uint2 random_pos[35];
+    for(int i = 0; i < 35; i++)
+    {
+        if(i / 6.f != pos.y) // On ne peut pas générer un bloc là où il y a déjà le premier
+            random_pos[i] = uint2(i % 6, i / 6.f);
+    }
+    melanger(random_pos, 35);
+
+// On génère nb_block - 1 blocs
+    int i = 0;
+    while(i < nb_block - 1)
+    {
+        // On génère ses caractéristiques
+        pos = random_pos[i];
+        size = rand() % 2;
+        orientation = random_orientation();
+
+        // On ajoute le bloc s'il n'y a pas de collision
+        if(test_can_block_fit(random_pos[i], size, orientation)) {
+            m_blocks_array[i + 1].set_data(
+                random_pos[i].x, 
+                random_pos[i].y, 
+                size,
+                orientation);
+            add_collision(m_blocks_array[i + 1]);
+
+            i++;
+        }
+    }
+}
+
 void Plateau::clear_collision_array() {
     s_plateau_data &= 0xfffffff000000000;
 }
 
-void Plateau::add_collision(uint2 pos) {
-    uint64_t encoded_pos = 1;
-    encoded_pos <<= pos.y * 6;
-    encoded_pos <<= pos.x;
-    s_plateau_data |= encoded_pos;
+void Plateau::add_collision(const Bloc& block) {
+    uint2 coords = block.get_coord();
+
+    for(int j = 0; j < block.get_size(); j++) {
+        uint64_t encoded_pos = 1;
+        encoded_pos <<= coords.y * 6;
+        encoded_pos <<= coords.x;
+        s_plateau_data |= encoded_pos;
+
+        if(block.get_orientation() == Orientation::horizontal)
+            coords.x++;
+        else
+            coords.y++;
+    }
+
+
 }
 
 bool Plateau::test_collision(uint2 pos) {
@@ -105,16 +205,7 @@ void Plateau::load() {
     clear_collision_array();
 
     for(std::size_t i = 0 ; i < get_block_count(); i++) {
-        uint2 coords = m_blocks_array[i].get_coord();
-
-        for(int j = 0; j < m_blocks_array[i].get_size(); j++) {
-            add_collision(coords);
-            
-            if(m_blocks_array[i].get_orientation() == Orientation::horizontal)
-                coords.x++;
-            else
-                coords.y++;
-        }
+        add_collision(m_blocks_array[i]);
     }
 }
 
