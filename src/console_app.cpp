@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <filesystem>
+#include <algorithm>
 
 static void update_liste_fichier(std::vector<std::string>& liste)
 {
@@ -59,9 +60,10 @@ void Window::main_loop()
             
             if(m_menu_entry == jeu)
             {
-                std::shared_ptr<Sommets> s = m_sommet_courrant.lock();
-                dessiner_plateau(s->get_plateau()->get_block_array(), s->get_plateau()->get_block_count());
-                // TODO: Récupérer l'antécédent du sommet actuel pour faire l'animation
+                std::shared_ptr<Bloc> s(m_animation[m_frame].get());
+                dessiner_plateau(s.get(), m_anim_block_count);
+                if(++m_frame > m_animation.size())
+                    m_frame = 0;   
             }
             else
                 dessiner_menu();
@@ -128,13 +130,29 @@ void Window::determiner_menu_select()
     break;
     case choix_fichier:
         m_menu_entry = jeu;
-        // Crée un plateau à partir du fichier sélectionné
         {
+            // Crée un plateau à partir du fichier sélectionné
+            //std::unique_ptr<Plateau> depart = std::make_unique<Plateau>("data/vniveaux/" + m_liste_fichiers[m_menu_selection] + ".rh");
+            //m_anim_block_count = depart.get_block_count();
+            //int tmp = depart->get_block_count();
+
             m_graph->charger_plateau(
                 std::make_unique<Plateau>("data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh")
             );
-            m_graph_result = std::move(m_graph->parcours(true)[0]);
-            m_sommet_courrant = m_graph_result;
+
+            //m_anim_block_count = tmp;
+            // On lance un parcours du graph, et on récupère le résultat
+            std::weak_ptr<Sommets> graph_res = m_graph->parcours(true)[0];
+
+            // On va récupérer tous les antécédents de ce noeud jusqu'à la racine, en les insérant dans l'animation
+            do {
+                m_animation.push_back(std::make_unique<Bloc>(*graph_res.lock()->get_plateau()->get_block_array()));
+                graph_res = graph_res.lock()->precedent;
+            } while(graph_res.lock() != nullptr);
+
+            // On remet l'animation dans le bon ordre
+            std::reverse(m_animation.begin(), m_animation.end());
+            m_frame = 0;
         }
     break;
     case choix_difficulte:

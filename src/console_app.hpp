@@ -41,8 +41,9 @@ private:
     uint8_t m_string_display_offset;
 
     Graph* m_graph;
-    std::shared_ptr<Sommets> m_graph_result;
-    std::weak_ptr<Sommets> m_sommet_courrant;
+    
+    std::vector<std::unique_ptr<Bloc>> m_animation;
+    std::size_t m_frame, m_anim_block_count;
     
     /**
      * @brief Définit la palette de couleur pour la ligne de menu actuelle

@@ -30,10 +30,11 @@ void Graph::charger_plateau(std::unique_ptr<Plateau> plateau)
     std::shared_ptr<Sommets> s = std::make_shared<Sommets>(std::move(plateau));
     m_hash_map.clear();
     m_hash_map.insert(
-        std::pair<Plateau*, std::shared_ptr<Sommets>>(
-            s->get_plateau().get(), 
+        std::make_pair(
+            s->get_plateau().get(),
             s
-        ));
+        )
+    );
     m_racine = s;
 }
 
