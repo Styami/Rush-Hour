@@ -10,7 +10,7 @@ Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
 Sommets::Sommets(const Sommets& s) :
     m_plateau(s.m_plateau),
     m_traite(s.m_traite),
-    m_distance((s.m_distance))
+    m_distance(s.m_distance)
 {}
 
 Sommets::Sommets(Sommets&& s) :
@@ -18,6 +18,28 @@ Sommets::Sommets(Sommets&& s) :
     m_traite(std::move(s.m_traite)),
     m_distance(std::move(s.m_distance))
 {}
+
+Sommets& Sommets::operator=(const Sommets& s)
+{
+    m_traite = s.m_traite;
+    m_distance = s.m_distance;
+    m_plateau = s.m_plateau;
+    return *this;
+}
+
+Sommets& Sommets::operator=(Sommets&& s)
+{
+    if(&s != this) {
+        m_traite = std::move(s.m_traite);
+        m_distance = std::move(s.m_distance);
+        m_plateau = std::move(s.m_plateau);
+
+        s.m_traite = 0;
+        s.m_distance = 0;
+    }
+
+    return *this;
+}
 
 Sommets::~Sommets(){
     m_traite = false;

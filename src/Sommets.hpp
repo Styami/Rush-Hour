@@ -26,6 +26,8 @@ class Sommets{
         Sommets(std::unique_ptr<Plateau> plateau);
         Sommets(const Sommets& s);
         Sommets(Sommets&& s);
+        Sommets& operator=(const Sommets& s);
+        Sommets& operator=(Sommets&& s);
 
         ~Sommets();
 

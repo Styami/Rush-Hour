@@ -34,6 +34,8 @@ public:
      */
     Plateau(Plateau&& p);
 
+    Plateau(const Plateau& p);
+
     /**
      * @brief Construit un plateau à partir d'un fichier
      * 
@@ -48,6 +50,8 @@ public:
      * @return Plateau 
      */
     Plateau& operator=(Plateau&& p);
+
+    Plateau & operator=(const Plateau & p);
 
     ~Plateau();
 

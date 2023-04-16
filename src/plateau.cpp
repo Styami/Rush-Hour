@@ -33,6 +33,15 @@ Plateau::Plateau(Plateau&& p) :
     p.m_blocks_array = nullptr;
 }
 
+Plateau::Plateau(const Plateau& p)
+{
+    m_blocks_array = new Bloc[get_block_count()];
+    for(int i = 0; i < get_block_count(); i++)
+    {
+        m_blocks_array[i] = p.m_blocks_array[i];
+    }
+}
+
 Plateau::Plateau(const std::string& file_path) :
     m_blocks_array(nullptr)
 {
@@ -47,6 +56,12 @@ Plateau& Plateau::operator=(Plateau&& p) {
 
         p.m_blocks_array = nullptr;
     }
+    return *this;
+}
+
+Plateau & Plateau::operator=(const Plateau & p) 
+{
+    m_blocks_array = p.m_blocks_array;
     return *this;
 }
 
