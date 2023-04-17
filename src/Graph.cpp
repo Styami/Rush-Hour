@@ -56,7 +56,7 @@ void Graph::generer(std::shared_ptr<Sommets> node){
             m_file_noeud.push(nouveau_sommet);
 
             // On met à jour le en même temps le noeud ajouté pour qu'il est un noeud précédent
-            nouveau_sommet->precedent=node;
+            nouveau_sommet->m_precedent = node.get();
 
             // On l'ajoute dans la hashmap
             m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(nouveau_sommet->get_plateau().get(), std::move(nouveau_sommet)));
@@ -125,7 +125,7 @@ std::shared_ptr<Sommets> Graph::generer_lvl(std::vector<std::shared_ptr<Sommets>
                 if(!s->m_traite){
                     m_file_noeud.push(s);
                     s->m_distance=current_node->m_distance+1;
-                    s->precedent=current_node;
+                    s->m_precedent = current_node.get();
                 }
             }
             current_node->m_traite=true;

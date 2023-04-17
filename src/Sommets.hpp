@@ -20,7 +20,7 @@ class Sommets{
 
     public:
         bool m_traite;
-        std::weak_ptr<Sommets> precedent;
+        const Sommets* m_precedent;
         mutable int m_distance;
 
         Sommets(std::unique_ptr<Plateau> plateau);

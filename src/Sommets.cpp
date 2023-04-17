@@ -4,18 +4,21 @@
 Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
     m_plateau(std::move(plateau)),
     m_traite(false),
+    m_precedent(this),
     m_distance(0)
 {}
 
 Sommets::Sommets(const Sommets& s) :
     m_plateau(s.m_plateau),
     m_traite(s.m_traite),
+    m_precedent(this),
     m_distance(s.m_distance)
 {}
 
 Sommets::Sommets(Sommets&& s) :
     m_plateau(std::move(s.m_plateau)),
     m_traite(std::move(s.m_traite)),
+    m_precedent(this),
     m_distance(std::move(s.m_distance))
 {}
 
@@ -23,6 +26,7 @@ Sommets& Sommets::operator=(const Sommets& s)
 {
     m_traite = s.m_traite;
     m_distance = s.m_distance;
+    m_precedent = s.m_precedent;
     m_plateau = s.m_plateau;
     return *this;
 }
@@ -32,6 +36,7 @@ Sommets& Sommets::operator=(Sommets&& s)
     if(&s != this) {
         m_traite = std::move(s.m_traite);
         m_distance = std::move(s.m_distance);
+        m_precedent = std::move(s.m_precedent);
         m_plateau = std::move(s.m_plateau);
 
         s.m_traite = 0;
@@ -61,7 +66,8 @@ std::vector<std::shared_ptr<Sommets>> Sommets::get_voisins() const
 {
     std::vector<std::shared_ptr<Sommets>> res;
     for(Lien link: m_chemin_voisins){
-        res.push_back(link.voisin.lock());
+        if(!link.voisin.expired())
+            res.push_back(link.voisin.lock());
     }
     return res;
 }
@@ -77,7 +83,7 @@ void Sommets::test(){
     assert(*noeud_test->get_plateau() == plateau_test);
     assert(noeud_test->m_traite == false);
     assert(noeud_test->m_distance == 0);
-    assert(noeud_test->precedent.expired());
+    //assert(noeud_test->m_precedent.expired());
     assert(noeud_test->m_chemin_voisins.empty());
 
     //test sur la génération des voisins
@@ -87,8 +93,8 @@ void Sommets::test(){
         std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(nouveau_plateau));
         noeud_test->link(nouveau_sommet,1);
         assert(nouveau_sommet->m_chemin_voisins[0].voisin.expired());
-        nouveau_sommet->precedent = noeud_test;
-        assert(nouveau_sommet->precedent.expired() == false);
+        nouveau_sommet->m_precedent = noeud_test.get();
+        //assert(nouveau_sommet->m_precedent.expired() == false);
     }
     
     //test permettant de savoir si le linkage à bien eu lieu
