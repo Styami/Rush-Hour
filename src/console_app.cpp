@@ -2,6 +2,7 @@
 
 #include "RPL/RPLconsole.hpp"
 #include "utils.hpp"
+#include "bloc.hpp"
 
 #include <memory>
 #include <vector>
@@ -23,7 +24,7 @@ static void update_liste_fichier(std::vector<std::string>& liste)
 }
 
 Window::Window(Graph* graph) :
-    m_window(12, 12, "Rush Hour", RPL::CONSOLE_BORDERED | RPL::CONSOLE_SPACED, 10),
+    m_window(12, 12, "Rush Hour", RPL::CONSOLE_BORDERED | RPL::CONSOLE_SPACED, 5),
     m_is_running(true),
     m_color_count(16),
     m_block_color(new Color[16]),
@@ -50,7 +51,7 @@ Window::~Window()
 
 void Window::main_loop()
 {
-
+    const Bloc* cur_frame;
     while(m_is_running)
     {
         if(m_window.handle_framerate())
@@ -60,9 +61,9 @@ void Window::main_loop()
             
             if(m_menu_entry == jeu)
             {
-                std::shared_ptr<Bloc> s(m_animation[m_frame].get());
-                dessiner_plateau(s.get(), m_anim_block_count);
-                if(++m_frame > m_animation.size())
+                cur_frame = m_animation[m_frame];
+                dessiner_plateau(cur_frame, m_anim_block_count);
+                if(++m_frame > m_animation.size() - 1)
                     m_frame = 0;   
             }
             else
@@ -74,6 +75,22 @@ void Window::main_loop()
         }
         handle_input();
     }
+}
+
+void Window::creer_animation(const Sommets* sommet_resultat)
+{
+    m_animation.clear();
+    m_anim_block_count = sommet_resultat->get_plateau()->get_block_count();
+
+    // On va récupérer tous les antécédents de ce noeud jusqu'à la racine, en les insérant dans l'animation
+    do {
+        m_animation.push_back(std::move(sommet_resultat->get_plateau()->get_block_array()));
+        sommet_resultat = sommet_resultat->m_precedent;
+    } while(sommet_resultat != sommet_resultat->m_precedent);
+
+    // On remet l'animation dans le bon ordre
+    std::reverse(m_animation.begin(), m_animation.end());
+    m_frame = 0;
 }
 
 void Window::dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count) 
@@ -131,32 +148,33 @@ void Window::determiner_menu_select()
     case choix_fichier:
         m_menu_entry = jeu;
         {
-            // Crée un plateau à partir du fichier sélectionné
-            //std::unique_ptr<Plateau> depart = std::make_unique<Plateau>("data/vniveaux/" + m_liste_fichiers[m_menu_selection] + ".rh");
-            //m_anim_block_count = depart.get_block_count();
-            //int tmp = depart->get_block_count();
+        // Crée un plateau à partir du fichier sélectionné
+        m_graph->charger_plateau(
+            std::make_unique<Plateau>("data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh")
+        );
 
-            m_graph->charger_plateau(
-                std::make_unique<Plateau>("data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh")
-            );
-
-            //m_anim_block_count = tmp;
-            // On lance un parcours du graph, et on récupère le résultat
-            std::weak_ptr<Sommets> graph_res = m_graph->parcours(true)[0];
-
-            // On va récupérer tous les antécédents de ce noeud jusqu'à la racine, en les insérant dans l'animation
-            do {
-                m_animation.push_back(std::make_unique<Bloc>(*graph_res.lock()->get_plateau()->get_block_array()));
-                graph_res = graph_res.lock()->precedent;
-            } while(graph_res.lock() != nullptr);
-
-            // On remet l'animation dans le bon ordre
-            std::reverse(m_animation.begin(), m_animation.end());
-            m_frame = 0;
+        // On lance un parcours du graph, et on génère l'animation avec
+        creer_animation(m_graph->parcours(true)[0].get());
         }
     break;
     case choix_difficulte:
+        {
+        std::unique_ptr<Plateau> p = std::make_unique<Plateau>();
+        std::vector<std::shared_ptr<Sommets>> resultat;
 
+        do {
+            p->generer_aleatoirement(8 + m_menu_selection * 3); // Facile: 8  Moyen: 11  Difficile: 14
+            m_graph->charger_plateau(std::move(p));
+
+            resultat = m_graph->parcours(false);
+        } while(resultat.size() == 0);
+
+        std::shared_ptr<Sommets> res = std::move(m_graph->generer_lvl(resultat));
+
+        creer_animation(
+            res.get()
+        );
+        }
     break;
     default:
     break;
@@ -278,7 +296,12 @@ void Window::dessiner_choix_fichier()
 
 void Window::dessiner_choix_difficulte() 
 {
-
+    determiner_palette(0);
+    m_window.print_char(determiner_x_debut(6), 4, "Facile");
+    determiner_palette(1);
+    m_window.print_char(determiner_x_debut(5), 5, "Moyen");
+    determiner_palette(2);
+    m_window.print_char(determiner_x_debut(9), 6, "Difficile");
 }
 
 void Window::handle_input() 

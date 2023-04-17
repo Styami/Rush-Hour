@@ -42,9 +42,16 @@ private:
 
     Graph* m_graph;
     
-    std::vector<std::unique_ptr<Bloc>> m_animation;
+    std::vector<const Bloc*> m_animation;
     std::size_t m_frame, m_anim_block_count;
     
+    /**
+     * @brief Crée l'animation à partir d'un sommet résultat
+     * 
+     * @param sommet_resultat Sommet renvoyé par les méthodes de parcours de graph
+     */
+    void creer_animation(const Sommets* sommet_resultat);
+
     /**
      * @brief Définit la palette de couleur pour la ligne de menu actuelle
      * selon si elle est sélectionnée ou non
