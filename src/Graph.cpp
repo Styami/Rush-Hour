@@ -27,7 +27,7 @@ Graph::~Graph() {
 
 void Graph::charger_plateau(std::unique_ptr<Plateau> plateau) 
 {
-    std::shared_ptr<Sommets> s = std::make_shared<Sommets>(std::move(plateau));
+    std::shared_ptr<Sommets> s = std::make_shared<Sommets>(std::move(plateau), s);
     m_hash_map.clear();
     m_hash_map.insert(
         std::make_pair(
@@ -48,15 +48,15 @@ void Graph::generer(std::shared_ptr<Sommets> node){
         if(potentiel_sommet == m_hash_map.end())
         { 
             // On crée le sommet à partir du plateau
-            std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau));
+            std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau), nouveau_sommet);
 
             // On fait les liens avec le sommets actuel
-            node->link(nouveau_sommet,1);
+            node->link(nouveau_sommet, node, 1);
             nouveau_sommet->m_distance = 1 + node->m_distance;
             m_file_noeud.push(nouveau_sommet);
 
             // On met à jour le en même temps le noeud ajouté pour qu'il est un noeud précédent
-            nouveau_sommet->m_precedent = node.get();
+            nouveau_sommet->m_precedent = m_hash_map[node->get_plateau().get()];
 
             // On l'ajoute dans la hashmap
             m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(nouveau_sommet->get_plateau().get(), std::move(nouveau_sommet)));
@@ -64,7 +64,8 @@ void Graph::generer(std::shared_ptr<Sommets> node){
         // le voisin est un noeud déjà existant
         else{ 
             // On fait les liens avec le sommets actuel
-            node->link(potentiel_sommet->second,1);
+
+            node->link(potentiel_sommet->second, m_hash_map[plateau.get()],1);
             // Le plateau sera delete puisque c'est un unique ptr
         }
     }
@@ -125,7 +126,7 @@ std::shared_ptr<Sommets> Graph::generer_lvl(std::vector<std::shared_ptr<Sommets>
                 if(!s->m_traite){
                     m_file_noeud.push(s);
                     s->m_distance=current_node->m_distance+1;
-                    s->m_precedent = current_node.get();
+                    s->m_precedent = current_node;
                 }
             }
             current_node->m_traite=true;
@@ -137,7 +138,8 @@ std::shared_ptr<Sommets> Graph::generer_lvl(std::vector<std::shared_ptr<Sommets>
 
 
 void Graph::test(){
-    Graph graph_test = Graph(std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/test_data_human_readable"))));
+    std::shared_ptr<Sommets> init_probleme = std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/test/test_data_human_readable")), init_probleme);
+    Graph graph_test = Graph(init_probleme);
     //test constructeur
     assert(graph_test.m_hash_map.empty());
     assert(graph_test.m_file_noeud.empty());

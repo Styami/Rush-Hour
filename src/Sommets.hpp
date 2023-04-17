@@ -20,11 +20,11 @@ class Sommets{
 
     public:
         bool m_traite;
-        const Sommets* m_precedent;
+        std::weak_ptr<Sommets> m_precedent;
         mutable int m_distance;
 
-        Sommets(std::unique_ptr<Plateau> plateau);
-        Sommets(const Sommets& s);
+        Sommets(std::unique_ptr<Plateau> plateau, std::shared_ptr<Sommets> precedent);
+        Sommets(const Sommets& s, std::shared_ptr<Sommets> precedent);
         Sommets(Sommets&& s);
         Sommets& operator=(const Sommets& s);
         Sommets& operator=(Sommets&& s);
@@ -32,7 +32,7 @@ class Sommets{
         ~Sommets();
 
         
-        void link(std::shared_ptr<Sommets> som, int poids);
+        void link(std::shared_ptr<Sommets> autre_sommet, std::shared_ptr<Sommets> sois_meme, int poids);
         std::vector<std::unique_ptr<Plateau>> generer_voisins();
 
 
