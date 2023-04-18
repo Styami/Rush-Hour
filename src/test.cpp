@@ -1,6 +1,8 @@
 #include "bloc.hpp"
 #include "plateau.hpp"
 #include "console_app.hpp"
+#include "Sommets.hpp"
+#include "Graph.hpp"
 
 int main(void) {
     int err = 0;
@@ -25,6 +27,10 @@ int main(void) {
     getchar();
 
     Window::test();
+    
+    Sommets::test();
+
+    Graph::test();
 
     std::cout << std::endl;
     
