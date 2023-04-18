@@ -130,22 +130,23 @@ std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool parcours_complet, boo
 }
 
 void Graph::test(){
-    std::shared_ptr<Sommets> init_probleme = std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/test/test_data_human_readable")));
+    std::shared_ptr<Sommets> init_probleme = std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/niveaux/niveau_0.rh")));
     init_probleme->m_precedent = init_probleme;
     Graph graph_test = Graph(init_probleme);
     //test constructeur
-    assert(graph_test.m_hash_map.empty());
+    assert(!graph_test.m_hash_map.empty());
     assert(graph_test.m_file_noeud.empty());
+    std::cout << "Contructeur Graph OK.\n";
 
     //tests de parcours
     std::vector<Bloc> bloc_gagnant;
     bloc_gagnant.push_back(Bloc(4, 1, false, Orientation::horizontal));
     std::unique_ptr<Plateau> plateau_test_gagnant = std::make_unique<Plateau>(bloc_gagnant);
     std::vector<std::shared_ptr<Sommets>> solutions;
-    //solutions.push_back(std::move(plateau_test_gagnant));
     solutions = graph_test.parcours(false, false, {std::make_shared<Sommets>(std::move(plateau_test_gagnant))});
     assert(solutions.size() == 1);
     assert(solutions[0]->get_plateau()->est_gagnant());
+    std::cout << "Parcours Graph avec solution possible OK.\n";
 
     //test où l'on cherche la solution d'un problème impossible
     bloc_gagnant.clear();
@@ -154,14 +155,5 @@ void Graph::test(){
     assert(!plateau_test_gagnant->est_gagnant()); //
     solutions = graph_test.parcours(true, true, {std::make_shared<Sommets>(std::move(plateau_test_gagnant))});
     assert(solutions.size() == 0);
-
-    
-    //test constructeur
-    // Graph graph_test(new Sommets<int>(3));
-    // assert(graph_test.m_noeud->get_plateau()==3);
-    // assert(graph_test.m_hash_map[3]->get_plateau()==3);
-    // graph_test.generer(graph_test.m_noeud,5);
-    // assert(graph_test.m_noeud->m_voisins.size()==5);
-    // assert(graph_test.m_file_noeud.size()==5);
-
+    std::cout << "Parcours Graph avec solution impossible OK.\n";
 }

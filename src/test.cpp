@@ -27,7 +27,7 @@ int main(void) {
     getchar();
 
     Window::test();
-
+    
     Sommets::test();
 
     Graph::test();
