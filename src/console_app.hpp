@@ -2,13 +2,14 @@
 #define __AFFICHAGE__
 
 #include "RPL/RPLconsole.hpp"
-#include "Graph.hpp"
 #include <string>
 #include <vector>
+#include <memory>
+#include "Sommets.hpp"
 
 class Window {
 public:
-    Window(Graph* graph = nullptr);
+    Window();
     ~Window();
 
     /**
@@ -39,13 +40,17 @@ private:
 
     // Permet d'afficher petit à petit un texte s'il est trop long
     uint8_t m_string_display_offset;
-
-    Graph* m_graph;
     
-    std::vector<const Bloc*> m_animation;
+    std::vector<std::shared_ptr<Plateau>> m_animation;
     std::size_t m_frame, m_anim_block_count, m_winning_block_index;
-    int level_count;
+    int m_level_count;
     
+    /**
+     * @brief Met à jour la liste des fichiers de niveaux
+     * 
+     */
+    void update_liste_fichier();
+
     /**
      * @brief Crée l'animation à partir d'un sommet résultat
      * 

@@ -1,11 +1,9 @@
-#include "Graph.hpp"
 #include "console_app.hpp"
 
 int main(){
     srand(time(NULL));
     
-    Graph g;
-    Window window(&g);
+    Window window;
 
     window.main_loop();
 
