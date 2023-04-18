@@ -2,16 +2,16 @@
 
 #include "RPL/RPLconsole.hpp"
 #include "utils.hpp"
-#include "bloc.hpp"
+#include "Graph.hpp"
 
 #include <memory>
 #include <vector>
 #include <filesystem>
 #include <algorithm>
 
-static void update_liste_fichier(std::vector<std::string>& liste)
+void Window::update_liste_fichier()
 {
-    liste.clear();
+    m_liste_fichiers.clear();
     // Listage de tous les fichiers de niveaux
     for(const auto& file : std::filesystem::directory_iterator("data/niveaux"))
     {
@@ -19,19 +19,19 @@ static void update_liste_fichier(std::vector<std::string>& liste)
         std::string raw_path = file.path();
         std::size_t start_index = raw_path.find_last_of('/') + 1;
         std::size_t end_index = raw_path.find_last_of('.');
-        liste.push_back(raw_path.substr(start_index, end_index - start_index));
+        m_liste_fichiers.push_back(raw_path.substr(start_index, end_index - start_index));
     }
+    m_level_count = m_liste_fichiers.size();
 }
 
-Window::Window(Graph* graph) :
+Window::Window() :
     m_window(12, 12, "Rush Hour", RPL::CONSOLE_BORDERED | RPL::CONSOLE_SPACED, 5),
     m_is_running(true),
     m_color_count(16),
     m_block_color(new Color[16]),
     m_menu_entry(choix_action),
     m_menu_selection(0),
-    m_string_display_offset(0),
-    m_graph(graph)
+    m_string_display_offset(0)
 {
     // Génération des couleurs aléatoire
     srand(time(NULL));
@@ -40,8 +40,7 @@ Window::Window(Graph* graph) :
         m_block_color[i].g = 100 + random() % 156;
         m_block_color[i].b = 100 + random() % 156;
     }
-    update_liste_fichier(m_liste_fichiers);
-    
+    update_liste_fichier();
 }
 
 Window::~Window() 
@@ -61,7 +60,7 @@ void Window::main_loop()
             
             if(m_menu_entry == jeu)
             {
-                cur_frame = m_animation[m_frame];
+                cur_frame = m_animation[m_frame]->get_block_array();
                 dessiner_plateau(cur_frame, m_anim_block_count);
                 if(++m_frame > m_animation.size() - 1)
                     m_frame = 0;   
@@ -82,9 +81,11 @@ void Window::creer_animation(const Sommets* sommet_resultat)
     m_animation.clear();
     m_anim_block_count = sommet_resultat->get_plateau()->get_block_count();
     m_winning_block_index = sommet_resultat->get_plateau()->get_winning_block();
+    
     // On va récupérer tous les antécédents de ce noeud jusqu'à la racine, en les insérant dans l'animation
     do {
-        m_animation.push_back(std::move(sommet_resultat->get_plateau()->get_block_array()));
+        m_animation.push_back(std::move(sommet_resultat->get_plateau()));
+        
         sommet_resultat = sommet_resultat->m_precedent.lock().get();
     } while(!sommet_resultat->m_precedent.expired() 
           && sommet_resultat->m_precedent.lock().get() != sommet_resultat);
@@ -135,6 +136,7 @@ void Window::determiner_menu_select()
     switch(m_menu_entry)
     {
     case choix_action:
+        update_liste_fichier();
         switch(m_menu_selection) {
         case 0:
             m_menu_entry = choix_fichier;
@@ -152,31 +154,36 @@ void Window::determiner_menu_select()
     case choix_fichier:
         m_menu_entry = jeu;
         {
+        Graph g;
         // Crée un plateau à partir du fichier sélectionné
-        m_graph->charger_plateau(
+        g.charger_plateau(
             std::make_unique<Plateau>("data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh")
         );
         
         // On lance un parcours du graph, et on génère l'animation avec
-        creer_animation(m_graph->parcours(false, true)[0].get());
+        creer_animation(g.parcours(false, true)[0].get());
         }
     break;
     case choix_difficulte:
-        m_menu_entry = jeu;
+        m_menu_entry = choix_action;
+        m_menu_selection = 0;
         {
-        std::unique_ptr<Plateau> p = std::make_unique<Plateau>();
+        Graph g;
         std::vector<std::shared_ptr<Sommets>> resultat;
 
         // On génère des plateaux tant qu'il n'existe pas de solution
         do {
-            p->generer_aleatoirement(8 + m_menu_selection * 3); // Facile: 8  Moyen: 11  Difficile: 14
-            m_graph->charger_plateau(std::move(p));
+            std::unique_ptr<Plateau> p = std::make_unique<Plateau>();
+            // Tant que le plateau n'est pas valide on le regénère
+            while(!p->generer_aleatoirement(8 + m_menu_selection * 3)); // Facile: 8  Moyen: 11  Difficile: 14
+            g.charger_plateau(std::move(p));
 
-            resultat = m_graph->parcours(true, true);
+            resultat = g.parcours(true, true);
         } while(resultat.size() == 0);
 
-        std::shared_ptr<Sommets> res = std::move(m_graph->parcours(true, false, resultat)[0]);
-        res->get_plateau()->sauvegarder("data/niveaux/niveau_1.rh");
+        std::shared_ptr<Sommets> res = std::move(g.parcours(true, false, resultat)[0]);
+        
+        res->get_plateau()->sauvegarder("data/niveaux/niveau_" + std::to_string(m_level_count) + ".rh");
         creer_animation(
             res.get()
         );
@@ -191,7 +198,7 @@ uint8_t Window::determienr_menu_choix_max()
 {
     switch(m_menu_entry) {
     case choix_action:
-        return 2; // charger, generer, quitter
+        return 2; // charger, generer et quitter
         break;
     case choix_fichier:
         return m_liste_fichiers.size() - 1;
@@ -264,11 +271,11 @@ void Window::dessiner_choix_action()
 {
     int start = determiner_x_debut(7);
     determiner_palette(0);
-    m_window.print_char(start, 4, "Charger");
+    m_window.print_char(start, 5, "Charger");
     determiner_palette(1);
-    m_window.print_char(start, 5, "Generer");
+    m_window.print_char(start, 6, "Generer");
     determiner_palette(2);
-    m_window.print_char(start, 7, "Quitter");
+    m_window.print_char(start, 8, "Quitter");
 }
 
 void Window::dessiner_choix_fichier()
@@ -325,6 +332,10 @@ void Window::handle_input()
             break;
         case 'v':
             determiner_menu_select();
+            break;
+        case 'm':
+            m_menu_entry = choix_action;
+            m_menu_selection = 0;
             break;
         case 'q':
             m_is_running = false;

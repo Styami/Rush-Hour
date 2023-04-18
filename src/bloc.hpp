@@ -29,6 +29,10 @@ public:
      */
     Bloc(const Bloc& b);
 
+    Bloc(Bloc&& b);
+
+    Bloc& operator=(const Bloc& b);
+
     // Renvoie un int2 contenant la position x et y du bloc
     uint2 get_coord() const;
 

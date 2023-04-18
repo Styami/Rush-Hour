@@ -98,12 +98,12 @@ bool Plateau::test_can_block_fit(uint2 pos, bool size, Orientation orientation)
     return true;
 }
 
-void Plateau::generer_aleatoirement(int nb_block)
+bool Plateau::generer_aleatoirement(int nb_block)
 {
 // Allocation mémoire
     int start_bloc_y;
 
-    if(m_blocks_array)
+    if(m_blocks_array != nullptr)
         delete [] m_blocks_array;
     m_blocks_array = new Bloc[nb_block];
     
@@ -137,7 +137,7 @@ void Plateau::generer_aleatoirement(int nb_block)
 
 // On génère nb_block - 1 blocs
     int cur_gen = 1, i = 0;
-    while(cur_gen < nb_block)
+    while(cur_gen < nb_block && i < 35)
     {
         // On test aléatoirement tous les arrangements possibles jusqu'à ce que ça fonctionne
         // Si jamais aucun ne fonctionne, alors cette position peut être rayée de la liste des
@@ -169,6 +169,9 @@ void Plateau::generer_aleatoirement(int nb_block)
         }
         i++;
     }
+    if(cur_gen < nb_block)
+        return false;
+    return true;
 }
 
 void Plateau::clear_collision_array() {

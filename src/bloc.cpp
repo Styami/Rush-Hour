@@ -13,6 +13,18 @@ Bloc::Bloc(const Bloc& b) :
     m_data(b.m_data)
 {}
 
+Bloc::Bloc(Bloc&& b) :
+    m_data(b.m_data)
+{
+    b.m_data = 0;
+}
+
+Bloc& Bloc::operator=(const Bloc& b)
+{
+    m_data = b.m_data;
+    return *this;
+}
+
 uint2 Bloc::get_coord() const {
     return uint2(
         (m_data & 0b11100000) >> 5,
