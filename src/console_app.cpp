@@ -198,7 +198,7 @@ uint8_t Window::determienr_menu_choix_max()
 {
     switch(m_menu_entry) {
     case choix_action:
-        return 3; // charger, generer, retour et quitter
+        return 2; // charger, generer et quitter
         break;
     case choix_fichier:
         return m_liste_fichiers.size() - 1;
