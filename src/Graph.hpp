@@ -17,7 +17,8 @@ class Graph{
         std::queue<std::shared_ptr<Sommets>> m_file_noeud;
 
         void generer(std::shared_ptr<Sommets> node);
-        void restart_parcours();
+        void init_parcours(bool generate_graph, std::vector<std::shared_ptr<Sommets>> solutions = {nullptr});
+        void ajouter_voisin_file(std::shared_ptr<Sommets> sommet_courant, bool generate_graph);
     public:
         Graph();
         Graph(std::shared_ptr<Sommets> node);
@@ -25,8 +26,15 @@ class Graph{
 
         void charger_plateau(std::unique_ptr<Plateau> plateau);
 
-        std::shared_ptr<Sommets> generer_lvl(std::vector<std::shared_ptr<Sommets>> solutions);
-        std::vector<std::shared_ptr<Sommets>> parcours(bool chercher_solution);
+        /**
+         * @brief Parcours le graph, soit en le générant au passage, soit en résolvant le graph déjà existant
+         * Dans le second cas, il faudra passer une liste des noeuds de bases pour trouver le point le plus éloigné de ceux-ci
+         * @param find_all Est-ce qu'on doit trouver tous les noeuds solutions
+         * @param generate_graph Est-ce qu'on doit générer le graph
+         * @param solutions Liste des solutions de base pour générer un nouveau niveau
+         * @return std::vector<std::shared_ptr<Sommets>> Liste des solutions trouvées par l'algorithme
+         */
+        std::vector<std::shared_ptr<Sommets>> parcours(bool parcours_complet, bool generate_graph, std::vector<std::shared_ptr<Sommets>> solutions = {});
         static void test();
 
 

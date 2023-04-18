@@ -81,12 +81,13 @@ void Window::creer_animation(const Sommets* sommet_resultat)
 {
     m_animation.clear();
     m_anim_block_count = sommet_resultat->get_plateau()->get_block_count();
-
+    m_winning_block_index = sommet_resultat->get_plateau()->get_winning_block();
     // On va récupérer tous les antécédents de ce noeud jusqu'à la racine, en les insérant dans l'animation
     do {
         m_animation.push_back(std::move(sommet_resultat->get_plateau()->get_block_array()));
-        sommet_resultat = sommet_resultat->m_precedent;
-    } while(sommet_resultat != sommet_resultat->m_precedent);
+        sommet_resultat = sommet_resultat->m_precedent.lock().get();
+    } while(!sommet_resultat->m_precedent.expired() 
+          && sommet_resultat->m_precedent.lock().get() != sommet_resultat);
 
     // On remet l'animation dans le bon ordre
     std::reverse(m_animation.begin(), m_animation.end());
@@ -101,7 +102,10 @@ void Window::dessiner_plateau(const Bloc* blocks_array, std::size_t blocks_count
     for(std::size_t i = 0; i < blocks_count; i++) {
         pos = blocks_array[i].get_coord() * 2;
 
-        m_window.set_color(m_block_color[i].r, m_block_color[i].g, m_block_color[i].b);
+        if(m_winning_block_index != i)
+            m_window.set_color(m_block_color[i].r, m_block_color[i].g, m_block_color[i].b);
+        else
+            m_window.set_color(255, 255, 0);
 
         for(int j = 0; j < blocks_array[i].get_size(); j++) {
             m_window.print_char(pos.x, pos.y);
@@ -152,25 +156,27 @@ void Window::determiner_menu_select()
         m_graph->charger_plateau(
             std::make_unique<Plateau>("data/niveaux/" + m_liste_fichiers[m_menu_selection] + ".rh")
         );
-
+        
         // On lance un parcours du graph, et on génère l'animation avec
-        creer_animation(m_graph->parcours(true)[0].get());
+        creer_animation(m_graph->parcours(false, true)[0].get());
         }
     break;
     case choix_difficulte:
+        m_menu_entry = jeu;
         {
         std::unique_ptr<Plateau> p = std::make_unique<Plateau>();
         std::vector<std::shared_ptr<Sommets>> resultat;
 
+        // On génère des plateaux tant qu'il n'existe pas de solution
         do {
             p->generer_aleatoirement(8 + m_menu_selection * 3); // Facile: 8  Moyen: 11  Difficile: 14
             m_graph->charger_plateau(std::move(p));
 
-            resultat = m_graph->parcours(false);
+            resultat = m_graph->parcours(true, true);
         } while(resultat.size() == 0);
 
-        std::shared_ptr<Sommets> res = std::move(m_graph->generer_lvl(resultat));
-
+        std::shared_ptr<Sommets> res = std::move(m_graph->parcours(true, false, resultat)[0]);
+        res->get_plateau()->sauvegarder("data/niveaux/niveau_1.rh");
         creer_animation(
             res.get()
         );

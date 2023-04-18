@@ -27,7 +27,8 @@ Graph::~Graph() {
 
 void Graph::charger_plateau(std::unique_ptr<Plateau> plateau) 
 {
-    std::shared_ptr<Sommets> s = std::make_shared<Sommets>(std::move(plateau), s);
+    std::shared_ptr<Sommets> s = std::make_shared<Sommets>(std::move(plateau));
+    s->m_precedent = s;
     m_hash_map.clear();
     m_hash_map.insert(
         std::make_pair(
@@ -38,8 +39,8 @@ void Graph::charger_plateau(std::unique_ptr<Plateau> plateau)
     m_racine = s;
 }
 
-void Graph::generer(std::shared_ptr<Sommets> node){
-    std::vector<std::unique_ptr<Plateau>> plateaux_voisins = node->generer_voisins();
+void Graph::generer(std::shared_ptr<Sommets> sommet_courrant){
+    std::vector<std::unique_ptr<Plateau>> plateaux_voisins = sommet_courrant->generer_voisins();
 
     for(std::unique_ptr<Plateau>& plateau : plateaux_voisins) {
         auto potentiel_sommet = m_hash_map.find(plateau.get());
@@ -48,44 +49,61 @@ void Graph::generer(std::shared_ptr<Sommets> node){
         if(potentiel_sommet == m_hash_map.end())
         { 
             // On crée le sommet à partir du plateau
-            std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau), nouveau_sommet);
+            std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau));
+            nouveau_sommet->m_precedent = sommet_courrant;
 
             // On fait les liens avec le sommets actuel
-            node->link(nouveau_sommet, node, 1);
-            nouveau_sommet->m_distance = 1 + node->m_distance;
+            sommet_courrant->creer_lien(nouveau_sommet, sommet_courrant, 1);
+            nouveau_sommet->m_distance = 1 + sommet_courrant->m_distance;
             m_file_noeud.push(nouveau_sommet);
-
-            // On met à jour le en même temps le noeud ajouté pour qu'il est un noeud précédent
-            nouveau_sommet->m_precedent = m_hash_map[node->get_plateau().get()];
 
             // On l'ajoute dans la hashmap
             m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(nouveau_sommet->get_plateau().get(), std::move(nouveau_sommet)));
         }
         // le voisin est un noeud déjà existant
-        else{ 
-            // On fait les liens avec le sommets actuel
+        else // On fait les liens avec le sommets actuel
+            sommet_courrant->creer_lien(potentiel_sommet->second, sommet_courrant,1);
+    }
+}
 
-            node->link(potentiel_sommet->second, m_hash_map[plateau.get()],1);
-            // Le plateau sera delete puisque c'est un unique ptr
+void Graph::init_parcours(bool generate_graph, std::vector<std::shared_ptr<Sommets>> solutions) 
+{
+    // On pousse les noeuds de base, soit c'est la racine du graph, soit c'est les noeuds solutions passé en paramètre
+    if(generate_graph)
+        m_file_noeud.push(m_racine.lock());
+    else {
+        for(std::shared_ptr<Sommets>& s : solutions)
+            m_file_noeud.push(s);
+
+        // Si le graph existe déjà, on reset les infos des sommets, mais pas les liens entres eux (ni leur contenu)
+        for(auto& it: m_hash_map){
+            it.second->m_traite=false;
+            it.second->m_distance=0;
+            it.second->m_precedent.reset();
         }
     }
 }
 
-void Graph::restart_parcours()
+void Graph::ajouter_voisin_file (std::shared_ptr<Sommets> sommet_courant, bool generate_graph)
 {
-    std::shared_ptr<Sommets> tmp = m_file_noeud.front();
-    while(!m_file_noeud.empty())
-    {
-        m_file_noeud.pop();
-    }
-    
-    for(auto &it:m_hash_map)
-        it.second.reset();
+    // On trouve les voisins du noeud à explorer
+    if(generate_graph)
+        generer(sommet_courant);
+    else
+        for(std::shared_ptr<Sommets>& s : sommet_courant->get_voisins()){
+            if(!s->m_traite){
+                m_file_noeud.push(s);
+                s->m_distance = sommet_courant->m_distance + 1;
+                s->m_precedent = sommet_courant;
+            }
+        }
 }
 
-std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool chercher_solution){
+std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool parcours_complet, bool generer_graph, std::vector<std::shared_ptr<Sommets>> solutions) 
+{
+    init_parcours(generer_graph, solutions);
+
     std::vector<std::shared_ptr<Sommets>> res;
-    m_file_noeud.push(m_racine.lock());
     std::shared_ptr<Sommets> current_noeud = nullptr;
     
     while(!m_file_noeud.empty())
@@ -94,51 +112,26 @@ std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool chercher_solution){
         m_file_noeud.pop();
         
         if(!current_noeud->m_traite){
+            current_noeud->m_traite = true;
+
+            // On ajoute les gagnants à la liste solution
             if(current_noeud->get_plateau()->est_gagnant()){
                 res.push_back(current_noeud);
-                if(chercher_solution)
+                if(!parcours_complet)
                     break;
             }
         
-            generer(current_noeud);
-            current_noeud->m_traite=true;
+            ajouter_voisin_file(current_noeud, generer_graph);
         }
     }
+    if(parcours_complet && !generer_graph)
+        return {current_noeud};
     return res;
 }
 
-
-std::shared_ptr<Sommets> Graph::generer_lvl(std::vector<std::shared_ptr<Sommets>> solutions){
-    for(auto& it: m_hash_map){
-        it.second->m_traite=false;
-        it.second->m_distance=0;
-    }
-    for(std::shared_ptr<Sommets> s: solutions)
-        m_file_noeud.push(s);
-    
-    std::shared_ptr<Sommets> current_node;
-    while(!m_file_noeud.empty()){
-        current_node=m_file_noeud.front();
-        m_file_noeud.pop();
-
-        if(!current_node->m_traite){
-            for(std::shared_ptr<Sommets> s : current_node->get_voisins()){
-                if(!s->m_traite){
-                    m_file_noeud.push(s);
-                    s->m_distance=current_node->m_distance+1;
-                    s->m_precedent = current_node;
-                }
-            }
-            current_node->m_traite=true;
-        }
-    }
-    
-    return current_node;
-}
-
-
 void Graph::test(){
-    std::shared_ptr<Sommets> init_probleme = std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/test/test_data_human_readable")), init_probleme);
+    std::shared_ptr<Sommets> init_probleme = std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/test/test_data_human_readable")));
+    init_probleme->m_precedent = init_probleme;
     Graph graph_test = Graph(init_probleme);
     //test constructeur
     assert(graph_test.m_hash_map.empty());
@@ -146,7 +139,7 @@ void Graph::test(){
 
     //tests de parcours
     std::vector<std::shared_ptr<Sommets>> solutions;
-    solutions = graph_test.parcours(true);
+    solutions = graph_test.parcours(false, false);
     assert(solutions.size() == 1);
 
     //test constructeur

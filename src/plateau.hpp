@@ -87,6 +87,13 @@ public:
     void charger(std::string file_path);
     void sauvegarder(std::string file_path);
 
+    /**
+     * @brief Renvoie l'index du bloc à sortir
+     *  Lit cette information depuis s_plateau_data
+     * @return std::size_t index du bloc gagnant
+     */
+    static std::size_t get_winning_block();
+
     // 
     //     Gestion table de hashage
     // 
@@ -222,12 +229,7 @@ private:
      */
     static void set_winning_block(uint64_t index);
 
-    /**
-     * @brief Renvoie l'index du bloc à sortir
-     *  Lit cette information depuis s_plateau_data
-     * @return std::size_t index du bloc gagnant
-     */
-    static std::size_t get_winning_block();
+    
 
 
     //     
