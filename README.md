@@ -19,7 +19,7 @@ BERTHOLON Noah
 Une application console s'affichera, dont le [fonctionnement](#Menu) est décrit plus loin.\
 Après avoir choisi ce que l'on souhaite faire avec l'application, une animation de la résolution du niveau est censé s'afficher.
 
-L'objectif de l'algorithme est de faire sortir le bloc jaune vif (les autres blocs ayant des teints plus ternes)
+L'objectif de l'algorithme est de faire sortir le bloc jaune vif vers la droite de l'écran (les autres blocs ayant des teints plus ternes)
 
 Il est vivement conseillé d'utiliser une console avec un thème sombre, et de laisser suffisament d'espace pour l'affichage afin d'éviter un flood de la console (14 lignes au moins)
 
