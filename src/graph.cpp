@@ -1,5 +1,7 @@
-#include "Graph.hpp"
-#include <memory>
+#include "graph.hpp"
+
+#include <iostream>
+#include <assert.h>
 
 // m_racine n'est qu'une référence faible vers le sommet stocké dans la hashmap
 Graph::Graph(std::shared_ptr<Sommets> node) :
@@ -39,66 +41,6 @@ void Graph::charger_plateau(std::unique_ptr<Plateau> plateau)
     m_racine = s;
 }
 
-void Graph::generer(std::shared_ptr<Sommets> sommet_courrant){
-    std::vector<std::unique_ptr<Plateau>> plateaux_voisins = sommet_courrant->generer_voisins();
-
-    for(std::unique_ptr<Plateau>& plateau : plateaux_voisins) {
-        auto potentiel_sommet = m_hash_map.find(plateau.get());
-
-        // le voisin est un noeud qui n'existait pas
-        if(potentiel_sommet == m_hash_map.end())
-        { 
-            // On crée le sommet à partir du plateau
-            std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau));
-            nouveau_sommet->m_precedent = sommet_courrant;
-
-            // On fait les liens avec le sommets actuel
-            sommet_courrant->creer_lien(nouveau_sommet, sommet_courrant, 1);
-            nouveau_sommet->m_distance = 1 + sommet_courrant->m_distance;
-            m_file_noeud.push(nouveau_sommet);
-
-            // On l'ajoute dans la hashmap
-            m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(nouveau_sommet->get_plateau().get(), std::move(nouveau_sommet)));
-        }
-        // le voisin est un noeud déjà existant
-        else // On fait les liens avec le sommets actuel
-            sommet_courrant->creer_lien(potentiel_sommet->second, sommet_courrant,1);
-    }
-}
-
-void Graph::init_parcours(bool generate_graph, std::vector<std::shared_ptr<Sommets>> solutions) 
-{
-    // On pousse les noeuds de base, soit c'est la racine du graph, soit c'est les noeuds solutions passé en paramètre
-    if(generate_graph)
-        m_file_noeud.push(m_racine.lock());
-    else {
-        for(std::shared_ptr<Sommets>& s : solutions)
-            m_file_noeud.push(s);
-
-        // Si le graph existe déjà, on reset les infos des sommets, mais pas les liens entres eux (ni leur contenu)
-        for(auto& it: m_hash_map){
-            it.second->m_traite=false;
-            it.second->m_distance=0;
-            it.second->m_precedent.reset();
-        }
-    }
-}
-
-void Graph::ajouter_voisin_file (std::shared_ptr<Sommets> sommet_courant, bool generate_graph)
-{
-    // On trouve les voisins du noeud à explorer
-    if(generate_graph)
-        generer(sommet_courant);
-    else
-        for(std::shared_ptr<Sommets>& s : sommet_courant->get_voisins()){
-            if(!s->m_traite){
-                m_file_noeud.push(s);
-                s->m_distance = sommet_courant->m_distance + 1;
-                s->m_precedent = sommet_courant;
-            }
-        }
-}
-
 std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool parcours_complet, bool generer_graph, std::vector<std::shared_ptr<Sommets>> solutions) 
 {
     init_parcours(generer_graph, solutions);
@@ -128,6 +70,73 @@ std::vector<std::shared_ptr<Sommets>> Graph::parcours(bool parcours_complet, boo
         return {current_noeud};
     return res;
 }
+
+void Graph::init_parcours(bool generate_graph, std::vector<std::shared_ptr<Sommets>> solutions) 
+{
+    // On pousse les noeuds de base, soit c'est la racine du graph, soit c'est les noeuds solutions passé en paramètre
+    if(generate_graph)
+        m_file_noeud.push(m_racine.lock());
+    else {
+        for(std::shared_ptr<Sommets>& s : solutions)
+            m_file_noeud.push(s);
+
+        // Si le graph existe déjà, on reset les infos des sommets, mais pas les liens entres eux (ni leur contenu)
+        for(auto& it: m_hash_map){
+            it.second->m_traite=false;
+            it.second->m_distance=0;
+            it.second->m_precedent.reset();
+        }
+    }
+}
+
+void Graph::ajouter_voisin_file (std::shared_ptr<Sommets> sommet_courant, bool generate_graph)
+{
+    // On trouve les voisins du noeud à explorer
+    if(generate_graph)
+        instancier_voisins(sommet_courant);
+    else
+        for(std::shared_ptr<Sommets>& s : sommet_courant->get_voisins()){
+            if(!s->m_traite){
+                m_file_noeud.push(s);
+                s->m_distance = sommet_courant->m_distance + 1;
+                s->m_precedent = sommet_courant;
+            }
+        }
+}
+
+void Graph::instancier_voisins(std::shared_ptr<Sommets> sommet_courrant){
+    std::vector<std::unique_ptr<Plateau>> plateaux_voisins = sommet_courrant->generer_voisins();
+
+    for(std::unique_ptr<Plateau>& plateau : plateaux_voisins) {
+        auto potentiel_sommet = m_hash_map.find(plateau.get());
+
+        // le voisin est un noeud qui n'existait pas
+        if(potentiel_sommet == m_hash_map.end())
+        { 
+            // On crée le sommet à partir du plateau
+            std::shared_ptr<Sommets> nouveau_sommet = std::make_shared<Sommets>(std::move(plateau));
+            nouveau_sommet->m_precedent = sommet_courrant;
+
+            // On fait les liens avec le sommets actuel
+            sommet_courrant->creer_lien(nouveau_sommet, sommet_courrant, 1);
+            nouveau_sommet->m_distance = 1 + sommet_courrant->m_distance;
+            m_file_noeud.push(nouveau_sommet);
+
+            // On l'ajoute dans la hashmap
+            m_hash_map.insert(std::pair<Plateau*, std::shared_ptr<Sommets>>(nouveau_sommet->get_plateau().get(), std::move(nouveau_sommet)));
+        }
+        // le voisin est un noeud déjà existant
+        else // On fait les liens avec le sommets actuel
+            sommet_courrant->creer_lien(potentiel_sommet->second, sommet_courrant,1);
+    }
+}
+
+//
+//
+//     TESTS UNITAIRES
+//
+//
+
 
 void Graph::test(){
     std::shared_ptr<Sommets> init_probleme = std::make_shared<Sommets>(std::move(std::make_unique<Plateau>("data/test/test_data_human_readable")));

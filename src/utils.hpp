@@ -1,9 +1,11 @@
 #ifndef __UTILS__
 #define __UTILS__
 
-#include <iostream>
 #include <ostream>
-#include <math.h>
+
+/*
+Contient des struct et foncitons utiles un peu partout dans le code
+*/
 
 struct uint2 {
     unsigned int x, y;

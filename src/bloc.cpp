@@ -1,5 +1,4 @@
 #include "bloc.hpp"
-#include "utils.hpp"
 
 Bloc::Bloc() :
     m_data(set_data(0, 0, false, Orientation::horizontal))
@@ -25,22 +24,9 @@ Bloc& Bloc::operator=(const Bloc& b)
     return *this;
 }
 
-uint2 Bloc::get_coord() const {
-    return uint2(
-        (m_data & 0b11100000) >> 5,
-        (m_data & 0b00011100) >> 2
-    );
-}
-
-uint8_t Bloc::get_size() const {
-    return ((m_data & 0b00000010) == 2 ? 3 : 2);
-}
-
-Orientation Bloc::get_orientation() const {
-    return (m_data & 0b00000001) == 0 ? Orientation::horizontal : Orientation::vertical;
-}
-
-char Bloc::get_raw() const {
+char& Bloc::operator=(char raw_data)
+{
+    m_data = raw_data;
     return m_data;
 }
 
@@ -55,23 +41,22 @@ char& Bloc::set_data(char _x, char _y, bool _size, Orientation _orientation) {
     return m_data;
 }
 
-char& Bloc::set_data(char raw_data) {
-    m_data = raw_data;
-    return m_data;
-}
-
 void Bloc::set_coord(uint2 new_coord) {
-    char data = new_coord.x;
-    data <<=3;
-    data += new_coord.y;
-    data <<=2;
-    m_data = data + (m_data & 0b00000011);
+    set_data(new_coord.x, new_coord.y, (m_data & 0b00000010), get_orientation());
 }
 
 std::ostream& operator<<(std::ostream& os, Bloc& a) {
     os << a.m_data;
     return os;
 }
+
+
+//
+//
+//     TESTS UNITAIRES
+//
+//
+
 
 bool Bloc::test() {
     int nb_erreur = 0;

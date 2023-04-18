@@ -1,11 +1,12 @@
-#ifndef __AFFICHAGE__
-#define __AFFICHAGE__
+#ifndef __CONSOLE_APP__
+#define __CONSOLE_APP__
 
 #include "RPL/RPLconsole.hpp"
+#include "sommet.hpp"
+
 #include <string>
 #include <vector>
 #include <memory>
-#include "Sommets.hpp"
 
 class Window {
 public:

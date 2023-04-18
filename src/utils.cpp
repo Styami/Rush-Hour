@@ -1,7 +1,7 @@
 #include "utils.hpp"
-/*
-Contient des struct et foncitons utiles un peu partout dans le code
-*/
+
+#include <iostream>
+#include <math.h>
 
 std::ostream& operator<<(std::ostream& os, const uint2& a) {
     os << "(" << a.x << ", " << a.y << ")";

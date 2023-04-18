@@ -1,4 +1,5 @@
 #include "plateau.hpp"
+
 #include "bloc.hpp"
 #include "utils.hpp"
 
@@ -24,7 +25,7 @@ Plateau::Plateau(std::vector<Bloc> blocks) :
 
     int i = 0;
     for(Bloc b : blocks)
-        m_blocks_array[i++].set_data(b.get_raw());
+        m_blocks_array[i++] = b.get_raw();
 }
 
 Plateau::Plateau(Plateau&& p) :
@@ -36,7 +37,7 @@ Plateau::Plateau(Plateau&& p) :
 Plateau::Plateau(const Plateau& p)
 {
     m_blocks_array = new Bloc[get_block_count()];
-    for(int i = 0; i < get_block_count(); i++)
+    for(std::size_t i = 0; i < get_block_count(); i++)
     {
         m_blocks_array[i] = p.m_blocks_array[i];
     }
@@ -69,11 +70,41 @@ Plateau::~Plateau() {
     delete [] m_blocks_array;
 }
 
+
+
+// Algorithme:
+// On va itérer sur tous les blocs du plateau.
+// Si on peut déplacer le bloc, alors on crée un nouveau plateau qui devient
+// voisin de la configuration actuelle.
+// Si on ne peut plus déplacer le bloc, on recommence dans la direction opposé
+std::vector<std::unique_ptr<Plateau>> Plateau::get_neighbours() {
+    load();
+
+    std::vector<std::unique_ptr<Plateau>> res;
+    int displacement;
+
+    for(std::size_t block_i = 0; block_i < get_block_count(); block_i++) {
+        displacement = 1;
+        while(can_block_move(block_i, displacement)) {
+            res.push_back(move_block(block_i, displacement));
+            displacement++;
+        }
+        displacement = -1;
+        while(can_block_move(block_i, displacement)) {
+            res.push_back(move_block(block_i, displacement));
+            displacement--;
+        }
+    }
+    
+    return res;
+}
+
+
 static void melanger(uint2* array, std::size_t count)
 {
     uint2 swap;
     int cur_count = count;
-    for(int i = 0; i < count - 1; i++)
+    for(std::size_t i = 0; i < count - 1; i++)
     {
         int index = rand() % cur_count;
         swap = array[cur_count - 1];
@@ -84,24 +115,11 @@ static void melanger(uint2* array, std::size_t count)
     }
 }
 
-bool Plateau::test_can_block_fit(uint2 pos, bool size, Orientation orientation)
-{
-    for(int j = 0 ; j < (size ? 3 : 2); j++ ) {
-        if(test_collision(pos) || pos.x > 5 || pos.y > 5) {
-            return false;
-        }
-        if(orientation == Orientation::horizontal)
-            pos.x++;
-        else
-            pos.y++;
-    }
-    return true;
-}
-
+// Les commentaires expliquent plutôt bien le pseudo code
 bool Plateau::generer_aleatoirement(int nb_block)
 {
 // Allocation mémoire
-    int start_bloc_y;
+    unsigned int start_bloc_y;
 
     if(m_blocks_array != nullptr)
         delete [] m_blocks_array;
@@ -113,7 +131,7 @@ bool Plateau::generer_aleatoirement(int nb_block)
     set_winning_block(0);
 
 // On génère d'abord le bloc à sortir
-    start_bloc_y = (unsigned int)(rand() % 6);
+    start_bloc_y = rand() % 6;
 
     m_blocks_array[0].set_data(0, start_bloc_y, rand() % 2, Orientation::horizontal);
     add_collision(m_blocks_array[0]);
@@ -174,97 +192,45 @@ bool Plateau::generer_aleatoirement(int nb_block)
     return true;
 }
 
-void Plateau::clear_collision_array() {
-    s_plateau_data &= 0xfffffff000000000;
-}
+void Plateau::charger(std::string file_path) 
+{
+    std::ifstream file(file_path);
+    assert(file.is_open());
+    unsigned char read;
 
-void Plateau::add_collision(const Bloc& block) {
-    uint2 coords = block.get_coord();
+    // Nombre de block
+    read = file.get();
+    set_block_count(read);
 
-    for(int j = 0; j < block.get_size(); j++) {
-        uint64_t encoded_pos = 1;
-        encoded_pos <<= coords.y * 6;
-        encoded_pos <<= coords.x;
-        s_plateau_data |= encoded_pos;
+    // Allocation mémoire du tableau
+    if(m_blocks_array != nullptr)
+        delete [] m_blocks_array;
+    m_blocks_array = new Bloc[get_block_count()];
 
-        if(block.get_orientation() == Orientation::horizontal)
-            coords.x++;
-        else
-            coords.y++;
+    // Bloc gagnant
+    read = file.get();
+    set_winning_block(read);
+
+    // Création des blocs
+    for(std::size_t i = 0; i < get_block_count(); i++) {
+        read = file.get();
+        m_blocks_array[i] = read;
     }
-
-
+    file.close();
 }
 
-bool Plateau::test_collision(uint2 pos) {
-    uint64_t encoded_pos = 1;
-    encoded_pos <<= pos.y * 6;
-    encoded_pos <<= pos.x;
-    return (bool)(encoded_pos & s_plateau_data);
-}
+void Plateau::sauvegarder(std::string file_path) 
+{
+    std::ofstream file(file_path);
 
-bool Plateau::test_collision(int index) {
-    uint64_t encoded_pos = 1;
-    encoded_pos <<= index;
-    return (bool)(encoded_pos & s_plateau_data); 
-}
-
-void Plateau::set_block_count(uint64_t count) {
-    assert(count > 0 && count <= 16);
-    s_plateau_data &= s_plateau_data & 0xffffff0fffffffff; 
-    s_plateau_data |= ((count - 1) << 36);
-}
-
-std::size_t Plateau::get_block_count() {
-    // 0x000000f000000000 correspond aux bits 36 à 39
-    return (std::size_t)((s_plateau_data & 0x000000f000000000) >> 36) + 1;
-}
-
-void Plateau::set_winning_block(uint64_t index) {
-    assert(index >= 0 && index < 16);
-    s_plateau_data &= 0xfffff0ffffffffff;
-    s_plateau_data |= (index << 40);
-}
-
-std::size_t Plateau::get_winning_block() {
-    // 0x00000f0000000000 correspond aux bits 40 à 43
-    return (std::size_t)((s_plateau_data & 0x00000f0000000000) >> 40);
-}
-
-void Plateau::load() {
-    s_loaded_plateau = this;
-    clear_collision_array();
+    file << (unsigned char)get_block_count();
+    file << (unsigned char)get_winning_block();
 
     for(std::size_t i = 0 ; i < get_block_count(); i++) {
-        add_collision(m_blocks_array[i]);
+        file << m_blocks_array[i].get_raw();
     }
-}
 
-// Algorithme:
-// On va itérer sur tous les blocs du plateau.
-// Si on peut déplacer le bloc, alors on crée un nouveau plateau qui devient
-// voisin de la configuration actuelle.
-// Si on ne peut plus déplacer le bloc, on recommence dans la direction opposé
-std::vector<std::unique_ptr<Plateau>> Plateau::get_neighbours() {
-    load();
-
-    std::vector<std::unique_ptr<Plateau>> res;
-    int displacement;
-
-    for(std::size_t block_i = 0; block_i < get_block_count(); block_i++) {
-        displacement = 1;
-        while(can_block_move(block_i, displacement)) {
-            res.push_back(move_block(block_i, displacement));
-            displacement++;
-        }
-        displacement = -1;
-        while(can_block_move(block_i, displacement)) {
-            res.push_back(move_block(block_i, displacement));
-            displacement--;
-        }
-    }
-    
-    return res;
+    file.close();
 }
 
 bool Plateau::est_gagnant() const{
@@ -272,6 +238,15 @@ bool Plateau::est_gagnant() const{
     if(winning_bloc.get_coord().x + winning_bloc.get_size() >= 6)
         return true;
     return false;
+}
+
+void Plateau::load() {
+    s_loaded_plateau = this;
+    s_plateau_data &= 0xfffffff000000000;
+
+    for(std::size_t i = 0 ; i < get_block_count(); i++) {
+        add_collision(m_blocks_array[i]);
+    }
 }
 
 bool Plateau::can_block_move(int block_index, int displacement) {
@@ -308,6 +283,68 @@ std::unique_ptr<Plateau> Plateau::move_block(int block_index, int displacement) 
     return std::make_unique<Plateau>(res);
 }
 
+void Plateau::add_collision(const Bloc& block) {
+    uint2 coords = block.get_coord();
+
+    for(int j = 0; j < block.get_size(); j++) {
+        uint64_t encoded_pos = 1;
+        encoded_pos <<= coords.y * 6;
+        encoded_pos <<= coords.x;
+        s_plateau_data |= encoded_pos;
+
+        if(block.get_orientation() == Orientation::horizontal)
+            coords.x++;
+        else
+            coords.y++;
+    }
+}
+
+bool Plateau::test_collision(uint2 pos) {
+    uint64_t encoded_pos = 1;
+    encoded_pos <<= pos.y * 6;
+    encoded_pos <<= pos.x;
+    return (bool)(encoded_pos & s_plateau_data);
+}
+
+bool Plateau::test_collision(int offset) {
+    uint64_t encoded_pos = 1;
+    encoded_pos <<= offset;
+    return (bool)(encoded_pos & s_plateau_data); 
+}
+
+bool Plateau::test_can_block_fit(uint2 pos, bool size, Orientation orientation)
+{
+    for(int j = 0 ; j < (size ? 3 : 2); j++ ) {
+        if(test_collision(pos) || pos.x > 5 || pos.y > 5) {
+            return false;
+        }
+        if(orientation == Orientation::horizontal)
+            pos.x++;
+        else
+            pos.y++;
+    }
+    return true;
+}
+
+void Plateau::set_block_count(uint64_t count) {
+    assert(count > 0 && count <= 16);
+    s_plateau_data &= s_plateau_data & 0xffffff0fffffffff; 
+    s_plateau_data |= ((count - 1) << 36);
+}
+
+
+void Plateau::set_winning_block(uint64_t index) {
+    assert(index >= 0 && index < 16);
+    s_plateau_data &= 0xfffff0ffffffffff;
+    s_plateau_data |= (index << 40);
+}
+
+
+// 
+//     Gestion table de hashage
+// 
+
+
 bool Plateau::operator==(const Plateau& p) const {
     for(std::size_t i = 0; i < get_block_count(); i++) {
         if(m_blocks_array[i].get_raw() != p.m_blocks_array[i].get_raw())
@@ -330,52 +367,13 @@ std::size_t Plateau::hash() const {
     return new_hash;
 }
 
-void Plateau::sauvegarder(std::string file_path) 
-{
-    std::ofstream file(file_path);
-
-    file << (unsigned char)get_block_count();
-    file << (unsigned char)get_winning_block();
-
-    for(std::size_t i = 0 ; i < get_block_count(); i++) {
-        file << m_blocks_array[i].get_raw();
-    }
-
-    file.close();
-}
-
-void Plateau::charger(std::string file_path) 
-{
-    std::ifstream file(file_path);
-    assert(file.is_open());
-    unsigned char read;
-
-    // Nombre de block
-    read = file.get();
-    set_block_count(read);
-
-    // Allocation mémoire du tableau
-    if(m_blocks_array != nullptr)
-        delete [] m_blocks_array;
-    m_blocks_array = new Bloc[get_block_count()];
-
-    // Bloc gagnant
-    read = file.get();
-    set_winning_block(read);
-
-    // Création des blocs
-    for(std::size_t i = 0; i < get_block_count(); i++) {
-        read = file.get();
-        m_blocks_array[i].set_data(read);
-    }
-    file.close();
-}
 
 //
 //
 //     TESTS UNITAIRES
 //
 //
+
 
 void static load_blocs_map(bool* arr, const Bloc* p, std::size_t p_size) {
     for(int i = 0; i < 36; i++)

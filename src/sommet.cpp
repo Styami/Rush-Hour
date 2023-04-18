@@ -1,35 +1,35 @@
-#include "Sommets.hpp"
+#include "sommet.hpp"
+
 #include <memory>
+#include <ctime>
+#include <cstdlib>
+#include <assert.h>
 
 Sommets::Sommets(std::unique_ptr<Plateau> plateau) :
-    m_plateau(std::move(plateau)),
     m_traite(false),
     m_distance(0),
-    id(rand())
+    m_plateau(std::move(plateau))
 {}
 
 Sommets::Sommets(const Sommets& s) :
-    m_plateau(s.m_plateau),
     m_traite(s.m_traite),
     m_distance(s.m_distance),
-    id(s.id)
+    m_plateau(s.m_plateau)
 {}
 
 Sommets::Sommets(Sommets&& s) :
-    m_plateau(std::move(s.m_plateau)),
     m_traite(std::move(s.m_traite)),
     m_precedent(s.m_precedent),
     m_distance(std::move(s.m_distance)),
-    id(s.id)
+    m_plateau(std::move(s.m_plateau))
 {}
 
 Sommets& Sommets::operator=(const Sommets& s)
 {
     m_traite = s.m_traite;
-    m_distance = s.m_distance;
     m_precedent = s.m_precedent;
+    m_distance = s.m_distance;
     m_plateau = s.m_plateau;
-    id = s.id;
     return *this;
 }
 
@@ -37,10 +37,9 @@ Sommets& Sommets::operator=(Sommets&& s)
 {
     if(&s != this) {
         m_traite = std::move(s.m_traite);
-        m_distance = std::move(s.m_distance);
         m_precedent = std::move(s.m_precedent);
+        m_distance = std::move(s.m_distance);
         m_plateau = std::move(s.m_plateau);
-        id = s.id;
         s.m_traite = 0;
         s.m_distance = 0;
     }
@@ -54,14 +53,11 @@ Sommets::~Sommets(){
     m_chemin_voisins.clear();
 }
 
+
+
 void Sommets::creer_lien(const std::shared_ptr<Sommets>& sommet_A, const std::shared_ptr<Sommets>& sommet_B, int poids){
     sommet_A->m_chemin_voisins.push_back({sommet_B, poids});
     sommet_B->m_chemin_voisins.push_back({sommet_A, poids});
-}
-
-std::shared_ptr<Plateau> Sommets::get_plateau() const
-{
-    return m_plateau;
 }
 
 std::vector<std::shared_ptr<Sommets>> Sommets::get_voisins() const
@@ -73,9 +69,13 @@ std::vector<std::shared_ptr<Sommets>> Sommets::get_voisins() const
     return res;
 }
 
-std::vector<std::unique_ptr<Plateau>> Sommets::generer_voisins(){
-    return m_plateau->get_neighbours();
-}
+
+//
+//
+//     TESTS UNITAIRES
+//
+//
+
 
 void Sommets::test(){
     Plateau plateau_test = Plateau("data/test_data_human_readable");

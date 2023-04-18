@@ -2,6 +2,7 @@
 #define __PLATEAU__
 
 #include "bloc.hpp"
+
 #include <memory>
 #include <string>
 #include <iostream>
@@ -63,6 +64,29 @@ public:
     std::vector<std::unique_ptr<Plateau>> get_neighbours();
 
     /**
+     * @brief Génère un plateau aléatoirement avec le nombre de bloc passé en paramètre
+     * 
+     * @param nb_block Nombre de bloc du plateau
+     * @return true La génération a réussi
+     * @return false La génération a échouée
+     */
+    bool generer_aleatoirement(int nb_block);
+
+    /**
+     * @brief Charge le plateau depuis un fichier
+     * 
+     * @param file_path Chemin vers le fichier
+     */
+    void charger(std::string file_path);
+
+    /**
+     * @brief Sauvegarde le plateau dans un fichier
+     * 
+     * @param file_path Chemin vers le fichier
+     */
+    void sauvegarder(std::string file_path);
+
+    /**
      * @brief Renvoie vrai si le plateau actuel est gagnant
      * 
      */
@@ -79,20 +103,15 @@ public:
      * @brief Renvoie le nombre de bloc dans le plateau
      *  Lit cette information depuis s_plateau_data
      * @return std::size_t 
-     */
-    static std::size_t get_block_count();
-
-    bool generer_aleatoirement(int nb_block);
-
-    void charger(std::string file_path);
-    void sauvegarder(std::string file_path);
+     */                                                                        // 0x000000f000000000 correspond aux bits 36 à 39
+    static std::size_t get_block_count() { return (std::size_t)((s_plateau_data & 0x000000f000000000) >> 36) + 1; };
 
     /**
      * @brief Renvoie l'index du bloc à sortir
      *  Lit cette information depuis s_plateau_data
      * @return std::size_t index du bloc gagnant
-     */
-    static std::size_t get_winning_block();
+     */// 0x00000f0000000000 correspond aux bits 40 à 43
+    static std::size_t get_winning_block() { return (std::size_t)((s_plateau_data & 0x00000f0000000000) >> 40); };
 
     // 
     //     Gestion table de hashage
@@ -127,23 +146,10 @@ public:
     //      Test unitaires
     // 
 
-    /**
-     * @brief Fonction de test
-     * 
-     * @return true La classe fonctionne comme attendu
-     * @return false La classe contient des bugs
-     */
     static bool test();
 
 private:
-    /**
-     * @brief Constructeur pour les tests, ne sera pas utilisé dans la version finale
-     * @param nb_blocks Nombre de blocs à créer
-     */
-    Plateau(std::size_t nb_blocks);
 
-    /** @brief Tableau de blocs composant le plateau de jeu
-     */
     Bloc* m_blocks_array;
 
     /**
@@ -163,9 +169,14 @@ private:
 
     /**
      * @brief Pointeur sur le plateau chargé
-     * 
      */
     static Plateau* s_loaded_plateau;
+
+    /**
+     * @brief Constructeur pour les tests, ne sera pas utilisé ailleurs
+     * @param nb_blocks Nombre de blocs à créer
+     */
+    Plateau(std::size_t nb_blocks);
 
     /**
      * @brief Défini le plateau comme actif vis à vis des tests de collisions et récupération des voisins.
@@ -197,8 +208,6 @@ private:
      */
     static std::unique_ptr<Plateau> move_block(int block_index, int displacement);
 
-    static void clear_collision_array();
-
     /**
      * @brief Ajoute une collision sur la case désignée.
      *  Écrit cette information sur s_plateau_data
@@ -212,7 +221,15 @@ private:
      * @param pos Coordonnée de la case a tester
      */
     static bool test_collision(uint2 pos);
-    static bool test_collision(int index);
+    static bool test_collision(int offset);
+
+    /**
+     * @brief Test si un bloc peut rentrer à l'emplacement indiqué
+     * 
+     * @param pos Position du bloc
+     * @param size Taille du bloc
+     * @param orientation Orientation du bloc
+     */
     bool test_can_block_fit(uint2 pos, bool size, Orientation orientation);
 
     /**

@@ -2,10 +2,8 @@
 
 #include "RPL/RPLconsole.hpp"
 #include "utils.hpp"
-#include "Graph.hpp"
+#include "graph.hpp"
 
-#include <memory>
-#include <vector>
 #include <filesystem>
 #include <algorithm>
 
