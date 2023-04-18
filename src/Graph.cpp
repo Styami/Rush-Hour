@@ -138,9 +138,25 @@ void Graph::test(){
     assert(graph_test.m_file_noeud.empty());
 
     //tests de parcours
+    std::vector<Bloc> bloc_gagnant;
+    bloc_gagnant.push_back(Bloc(4, 1, false, Orientation::horizontal));
+    std::unique_ptr<Plateau> plateau_test_gagnant = std::make_unique<Plateau>(bloc_gagnant);
     std::vector<std::shared_ptr<Sommets>> solutions;
-    solutions = graph_test.parcours(false, false);
+    //solutions.push_back(std::move(plateau_test_gagnant));
+    solutions = graph_test.parcours(false, false, {std::make_shared<Sommets>(std::move(plateau_test_gagnant))});
     assert(solutions.size() == 1);
+    assert(solutions[0]->get_plateau()->est_gagnant());
+
+
+    bloc_gagnant.clear();
+    bloc_gagnant.push_back(Bloc(4, 1, false, Orientation::vertical));
+    std::unique_ptr<Plateau> plateau_test_gagnant = std::make_unique<Plateau>(bloc_gagnant);
+    assert(!plateau_test_gagnant->est_gagnant()); //
+    solutions = graph_test.parcours(true, true, {std::make_shared<Sommets>(std::move(plateau_test_gagnant))});
+    assert(solutions.size() == 0);
+
+
+
 
     //test constructeur
     // Graph graph_test(new Sommets<int>(3));
