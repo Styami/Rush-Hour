@@ -164,7 +164,7 @@ void Window::determiner_menu_select()
     break;
     case choix_difficulte:
         m_menu_entry = choix_action;
-        m_menu_selection = 0;
+        
         {
         Graph g;
         std::vector<std::shared_ptr<Sommets>> resultat;
@@ -186,6 +186,7 @@ void Window::determiner_menu_select()
             res.get()
         );
         }
+        m_menu_selection = 0;
     break;
     default:
     break;
