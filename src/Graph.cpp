@@ -147,17 +147,15 @@ void Graph::test(){
     assert(solutions.size() == 1);
     assert(solutions[0]->get_plateau()->est_gagnant());
 
-
+    //test où l'on cherche la solution d'un problème impossible
     bloc_gagnant.clear();
     bloc_gagnant.push_back(Bloc(4, 1, false, Orientation::vertical));
-    std::unique_ptr<Plateau> plateau_test_gagnant = std::make_unique<Plateau>(bloc_gagnant);
+    plateau_test_gagnant = std::make_unique<Plateau>(bloc_gagnant);
     assert(!plateau_test_gagnant->est_gagnant()); //
     solutions = graph_test.parcours(true, true, {std::make_shared<Sommets>(std::move(plateau_test_gagnant))});
     assert(solutions.size() == 0);
 
-
-
-
+    
     //test constructeur
     // Graph graph_test(new Sommets<int>(3));
     // assert(graph_test.m_noeud->get_plateau()==3);
