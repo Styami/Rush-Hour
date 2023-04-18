@@ -82,7 +82,7 @@ public:
      */
     static std::size_t get_block_count();
 
-    void generer_aleatoirement(int nb_block);
+    bool generer_aleatoirement(int nb_block);
 
     void charger(std::string file_path);
     void sauvegarder(std::string file_path);

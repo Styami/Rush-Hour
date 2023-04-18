@@ -44,6 +44,7 @@ private:
     
     std::vector<const Bloc*> m_animation;
     std::size_t m_frame, m_anim_block_count, m_winning_block_index;
+    int level_count;
     
     /**
      * @brief Crée l'animation à partir d'un sommet résultat

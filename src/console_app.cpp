@@ -11,6 +11,7 @@
 
 static void update_liste_fichier(std::vector<std::string>& liste)
 {
+    int level_count;
     liste.clear();
     // Listage de tous les fichiers de niveaux
     for(const auto& file : std::filesystem::directory_iterator("data/niveaux"))
@@ -41,7 +42,7 @@ Window::Window(Graph* graph) :
         m_block_color[i].b = 100 + random() % 156;
     }
     update_liste_fichier(m_liste_fichiers);
-    
+    level_count = m_liste_fichiers.size();
 }
 
 Window::~Window() 
@@ -162,21 +163,23 @@ void Window::determiner_menu_select()
         }
     break;
     case choix_difficulte:
-        m_menu_entry = jeu;
+        m_menu_entry = choix_action;
         {
-        std::unique_ptr<Plateau> p = std::make_unique<Plateau>();
         std::vector<std::shared_ptr<Sommets>> resultat;
 
         // On génère des plateaux tant qu'il n'existe pas de solution
         do {
-            p->generer_aleatoirement(8 + m_menu_selection * 3); // Facile: 8  Moyen: 11  Difficile: 14
+            std::unique_ptr<Plateau> p = std::make_unique<Plateau>();
+            // Tant que le plateau n'est pas valide on le regénère
+            while(!p->generer_aleatoirement(8 + m_menu_selection * 3)); // Facile: 8  Moyen: 11  Difficile: 14
             m_graph->charger_plateau(std::move(p));
 
             resultat = m_graph->parcours(true, true);
         } while(resultat.size() == 0);
 
         std::shared_ptr<Sommets> res = std::move(m_graph->parcours(true, false, resultat)[0]);
-        res->get_plateau()->sauvegarder("data/niveaux/niveau_1.rh");
+        
+        res->get_plateau()->sauvegarder("data/niveaux/niveau_" + std::to_string(level_count) + ".rh");
         creer_animation(
             res.get()
         );
