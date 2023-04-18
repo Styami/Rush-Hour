@@ -1,8 +1,8 @@
 #include "bloc.hpp"
 #include "plateau.hpp"
 #include "console_app.hpp"
-#include "Sommets.hpp"
-#include "Graph.hpp"
+#include "sommet.hpp"
+#include "graph.hpp"
 
 int main(void) {
     int err = 0;
