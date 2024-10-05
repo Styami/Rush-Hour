@@ -159,7 +159,8 @@ void Graph::test(){
 
     //test où l'on cherche la solution d'un problème impossible
     bloc_gagnant.clear();
-    bloc_gagnant.push_back(Bloc(4, 1, false, Orientation::vertical));
+    bloc_gagnant.push_back(Bloc(0, 1, false, Orientation::horizontal));
+    bloc_gagnant.push_back(Bloc(2, 1, false, Orientation::horizontal));
     plateau_test_gagnant = std::make_unique<Plateau>(bloc_gagnant);
     assert(!plateau_test_gagnant->est_gagnant()); //
     solutions = graph_test.parcours(true, true, {std::make_shared<Sommets>(std::move(plateau_test_gagnant))});

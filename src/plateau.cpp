@@ -22,6 +22,7 @@ Plateau::Plateau(std::vector<Bloc> blocks) :
     m_blocks_array(new Bloc[blocks.size()])
 {
     Plateau::set_block_count(blocks.size());
+    Plateau::set_winning_block(0);
 
     int i = 0;
     for(Bloc b : blocks)
